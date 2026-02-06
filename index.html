@@ -46,6 +46,9 @@
         <section id="view-memory" class="view">
             <div class="content-wrapper">
                 <h2>Memory Archives</h2>
+                <div class="memory-stats" style="margin-bottom: 10px; color: #888; font-size: 12px;">
+                    <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
+                </div>
                 <div id="memory-content" class="markdown-body">
                     <!-- RISA_PROFILE content will be injected here -->
                 </div>
@@ -66,6 +69,14 @@
                 </div>
 
                 <div class="setting-item">
+                    <label>Cloud Sync</label>
+                    <button id="sync-btn" class="settings-btn">
+                        <i class="ph ph-arrows-clockwise"></i> Force Sync
+                    </button>
+                    <p class="desc">Fetch latest history from Google Sheets.</p>
+                </div>
+
+                <div class="setting-item">
                     <label>System Status</label>
                     <div class="status-indicator">
                         <span class="dot online"></span> Nero is Active
@@ -74,7 +85,7 @@
 
                 <div class="setting-item">
                     <label>Version</label>
-                    <p class="desc">v13.0 (Mobile Optimized)</p>
+                    <p class="desc">v13.0 (Mobile Optimized + Cloud)</p>
                 </div>
             </div>
         </section>

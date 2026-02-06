@@ -1,6 +1,6 @@
 
 // ==========================================
-// NeroSanctuary Logic (Tabs & Mobile v13)
+// NeroSanctuary Logic (Cloud Sync v14)
 // ==========================================
 
 // --- 1. Config ---
@@ -10,8 +10,7 @@ const PROXY_URL = "https://script.google.com/macros/s/AKfycbwUlOcMKQLKHm4LJCZvOn
 let chatLog = [];
 
 // --- 3. DOM Elements ---
-let chatMessages, chatInput, sendBtn, uploadBtn, imageInput, panicBtn, exportBtn;
-// Tab Elements
+let chatMessages, chatInput, sendBtn, uploadBtn, imageInput, panicBtn, exportBtn, syncBtn, syncStatus;
 let tabs, views;
 
 // --- 4. Initialization ---
@@ -24,16 +23,21 @@ document.addEventListener("DOMContentLoaded", () => {
     imageInput = document.getElementById("image-input");
     panicBtn = document.getElementById("panic-btn");
     exportBtn = document.getElementById("export-btn");
+    syncBtn = document.getElementById("sync-btn");
+    syncStatus = document.getElementById("sync-status");
 
     // Capture Tab Elements
     tabs = document.querySelectorAll(".tab-btn");
     views = document.querySelectorAll(".view");
 
-    console.log("DOM Loaded. Mobile Tab View.");
+    console.log("DOM Loaded. Cloud Sync Active.");
 
     // Initialize Memory View
     initMemoryView();
-    loadHistory();
+    // Load local history first
+    loadHistoryLogic();
+    // Attempt Cloud Sync
+    fetchHistoryFromCloud();
 
     // Event Listeners: Input
     if (sendBtn) sendBtn.addEventListener("click", sendMessage);
@@ -57,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (panicBtn) panicBtn.addEventListener("click", handlePanic);
     if (exportBtn) exportBtn.addEventListener("click", handleExport);
+    if (syncBtn) syncBtn.addEventListener("click", fetchHistoryFromCloud);
 
     // Event Listeners: Tabs
     tabs.forEach(tab => {
@@ -77,11 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function switchTab(clickedTab) {
     const targetId = clickedTab.dataset.target;
 
-    // Update Tabs
     tabs.forEach(t => t.classList.remove("active"));
     clickedTab.classList.add("active");
 
-    // Update Views
     views.forEach(v => {
         if (v.id === targetId) {
             v.classList.add("active-view");
@@ -90,7 +93,6 @@ function switchTab(clickedTab) {
         }
     });
 
-    // Special scroll handling (maintain scroll position)
     if (targetId === "view-chat") scrollToBottom();
 }
 
@@ -103,7 +105,62 @@ function initMemoryView() {
     }
 }
 
-// --- 6. Chat Handlers (No Changes below, just re-attached) ---
+// --- 6. Cloud Sync Logic ---
+async function fetchHistoryFromCloud() {
+    if (syncStatus) syncStatus.textContent = "Syncing...";
+    console.log("Fetching history from Cloud...");
+
+    // We assume the GAS script listens for POST with { "action": "getHistory" }
+    // or handles simple GET. To stay safe using the CORS bypass method (text/plain POST):
+    const payload = {
+        action: "getHistory"
+    };
+
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Fetch Error ${res.status}`);
+
+        const textResponse = await res.text();
+        const data = JSON.parse(textResponse);
+
+        // Expected data format: { history: [ {role: "user", text: "..."}, ... ] }
+        if (data.history && Array.isArray(data.history)) {
+            console.log(`Cloud returned ${data.history.length} messages.`);
+
+            // Merge logic: Overwrite chatLog with cloud data for simplicity (Source of Truth)
+            // Or append? Let's treat Cloud as Truth.
+            chatLog = data.history;
+
+            // Re-render
+            const container = document.getElementById("chat-messages");
+            container.innerHTML = ""; // Clear current
+            chatLog.forEach(msg => displayMessage(msg.role, msg.text, msg.image));
+
+            scrollToBottom();
+
+            // Save to local
+            localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog));
+
+            if (syncStatus) syncStatus.textContent = `Synced (${chatLog.length} msgs)`;
+            alert(`Synced ${chatLog.length} messages from Cloud!`);
+        } else {
+            console.warn("Cloud Sync: No history array in response", data);
+            if (syncStatus) syncStatus.textContent = "Sync Empty";
+        }
+
+    } catch (e) {
+        console.error("Cloud Sync Failed:", e);
+        if (syncStatus) syncStatus.textContent = "Sync Failed";
+    }
+}
+
+
+// --- 7. Chat Handlers ---
 
 async function sendMessage() {
     const text = chatInput.value.trim();
@@ -169,7 +226,7 @@ async function handlePanic() {
     }
 }
 
-// --- 7. Proxy (Preserved) ---
+// --- 8. Proxy ---
 async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) {
     const systemPrompt = NERO_PERSONA_TEXT + "\n\n" + RISA_PROFILE + "\n\n[Date: " + new Date().toLocaleString() + "]";
 
@@ -220,6 +277,9 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
             return data.candidates[0].content.parts[0].text;
         } else if (data.error) {
             throw new Error("Gemini Error: " + JSON.stringify(data.error));
+        } else if (data.history) {
+            // Edge case where proxy returns history instead of generation? Unlikely with this payload.
+            return "Server returned history only.";
         } else {
             throw new Error("No content.");
         }
@@ -229,7 +289,7 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
     }
 }
 
-// --- 8. Display Utils ---
+// --- 9. Display Utils ---
 function displayMessage(role, text, imageUrl = null) {
     if (!chatMessages) return;
     const div = document.createElement("div");
@@ -284,7 +344,7 @@ function saveToHistory(role, text, image = null) {
     localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog));
 }
 
-function loadHistory() {
+function loadHistoryLogic() {
     const data = localStorage.getItem("nero_logs_v12");
     if (data) {
         chatLog = JSON.parse(data);
