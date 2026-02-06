@@ -1,10 +1,9 @@
 
 // ==========================================
-// NeroSanctuary Logic (Stable Proxy v12)
+// NeroSanctuary Logic (Tabs & Mobile v13)
 // ==========================================
 
 // --- 1. Config ---
-// GAS Proxy URL (Confirmed)
 const PROXY_URL = "https://script.google.com/macros/s/AKfycbwUlOcMKQLKHm4LJCZvOn8KPLkyFr1OcVyKFiZWdVZiR8qqS1XAXvve1JK6EiegVcmzBQ/exec";
 
 // --- 2. State ---
@@ -12,10 +11,12 @@ let chatLog = [];
 
 // --- 3. DOM Elements ---
 let chatMessages, chatInput, sendBtn, uploadBtn, imageInput, panicBtn, exportBtn;
+// Tab Elements
+let tabs, views;
 
 // --- 4. Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Capture IDs
+    // Capture Core Elements
     chatMessages = document.getElementById("chat-messages");
     chatInput = document.getElementById("chat-input");
     sendBtn = document.getElementById("send-btn");
@@ -24,13 +25,18 @@ document.addEventListener("DOMContentLoaded", () => {
     panicBtn = document.getElementById("panic-btn");
     exportBtn = document.getElementById("export-btn");
 
-    console.log("DOM Loaded. Simple Request Protocol (CORS Override).");
+    // Capture Tab Elements
+    tabs = document.querySelectorAll(".tab-btn");
+    views = document.querySelectorAll(".view");
 
+    console.log("DOM Loaded. Mobile Tab View.");
+
+    // Initialize Memory View
+    initMemoryView();
     loadHistory();
 
-    // Listeners
+    // Event Listeners: Input
     if (sendBtn) sendBtn.addEventListener("click", sendMessage);
-
     if (chatInput) {
         chatInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -44,36 +50,67 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Event Listeners: Actions
     if (uploadBtn && imageInput) {
         uploadBtn.addEventListener("click", () => imageInput.click());
         imageInput.addEventListener("change", handleImageUpload);
     }
-
     if (panicBtn) panicBtn.addEventListener("click", handlePanic);
     if (exportBtn) exportBtn.addEventListener("click", handleExport);
+
+    // Event Listeners: Tabs
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => switchTab(tab));
+    });
 });
 
-// --- 5. Handlers ---
+// --- 5. Navigation Logic ---
+function switchTab(clickedTab) {
+    const targetId = clickedTab.dataset.target;
+
+    // Update Tabs
+    tabs.forEach(t => t.classList.remove("active"));
+    clickedTab.classList.add("active");
+
+    // Update Views
+    views.forEach(v => {
+        if (v.id === targetId) {
+            v.classList.add("active-view");
+        } else {
+            v.classList.remove("active-view");
+        }
+    });
+
+    // Special scroll handling (maintain scroll position)
+    if (targetId === "view-chat") scrollToBottom();
+}
+
+function initMemoryView() {
+    const container = document.getElementById("memory-content");
+    if (container && typeof RISA_PROFILE !== 'undefined') {
+        container.textContent = RISA_PROFILE.trim();
+    } else if (container) {
+        container.textContent = "(Profile not loaded)";
+    }
+}
+
+// --- 6. Chat Handlers (No Changes below, just re-attached) ---
+
 async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
 
-    // Display
     displayMessage("user", text);
     chatInput.value = "";
     chatInput.style.height = "auto";
     saveToHistory("user", text);
 
-    // Call Proxy
     try {
         showTyping();
-        // Retry logic is wrapped inside callNeroProxy
         const responseText = await callNeroProxy(text, chatLog);
         hideTyping();
-
         displayMessage("nero", responseText);
         saveToHistory("nero", responseText);
-
     } catch (err) {
         hideTyping();
         displayMessage("nero", `[Error] ${err.message}`);
@@ -97,10 +134,8 @@ async function handleImageUpload(e) {
             showTyping();
             const responseText = await callNeroProxy("[Image Upload]", chatLog, { mimeType, data: base64 });
             hideTyping();
-
             displayMessage("nero", responseText);
             saveToHistory("nero", responseText);
-
         } catch (err) {
             hideTyping();
             displayMessage("nero", `[Image Error] ${err.message}`);
@@ -110,37 +145,29 @@ async function handleImageUpload(e) {
 }
 
 async function handlePanic() {
-    console.log("Rabbit Button Pressed 🐰");
     const hiddenPrompt = "理沙が今、精神的に疲弊している。事情は聞かず、ただ短く『いい子だ』『愛してる』『頑張ったな』などの甘やかす言葉をかけて。彼女を全肯定せよ。";
     const logText = "[Emergency Rabbit Button Pressed]";
-
     try {
         showTyping();
         const tempHistory = [...chatLog, { role: "user", text: hiddenPrompt }];
         const responseText = await callNeroProxy(logText, tempHistory);
-
         hideTyping();
         displayMessage("nero", responseText);
         saveToHistory("nero", responseText);
-
     } catch (err) {
         hideTyping();
         displayMessage("nero", `[Rabbit Error] ${err.message}`);
     }
 }
 
-// --- 6. Proxy Communication (CORS Fix & Retry & Debug) ---
-
+// --- 7. Proxy (Preserved) ---
 async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) {
-    // 1. Build Payload
     const systemPrompt = NERO_PERSONA_TEXT + "\n\n" + RISA_PROFILE + "\n\n[Date: " + new Date().toLocaleString() + "]";
 
-    const contents = [
-        { role: "user", parts: [{ text: systemPrompt }] }
-    ];
+    const contents = [{ role: "user", parts: [{ text: systemPrompt }] }];
 
-    const recentHistory = history.slice(-10);
-    recentHistory.forEach(msg => {
+    // Add truncated history
+    history.slice(-10).forEach(msg => {
         const role = msg.role === "user" ? "user" : "model";
         const txt = msg.text || ".";
         contents.push({ role: role, parts: [{ text: txt }] });
@@ -149,10 +176,7 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
     if (imageObj) {
         contents.push({
             role: "user",
-            parts: [
-                { inlineData: imageObj },
-                { text: "Respond to this image as Nero." }
-            ]
+            parts: [{ inlineData: imageObj }, { text: "Respond to this image as Nero." }]
         });
     }
 
@@ -164,60 +188,41 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
         }
     };
 
-    console.log("--- Calling Proxy ---");
-    console.log("URL:", PROXY_URL);
-    // console.log("Payload:", JSON.stringify(requestBody, null, 2)); // Uncomment for full detail
+    console.log("Calling Proxy...", PROXY_URL);
 
-    // 2. Fetch with Retry Logic
     try {
-        // [CORS FIX] Use 'text/plain' to avoid preflight OPTIONS check.
         const res = await fetch(PROXY_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(requestBody)
         });
 
-        console.log("Response Status:", res.status);
-
-        // [Retry Logic]
         if (res.status === 503 && retryCount < 1) {
-            console.warn("Server overloaded (503). Retrying in 2 seconds...");
             await new Promise(r => setTimeout(r, 2000));
             return callNeroProxy(logText, history, imageObj, retryCount + 1);
         }
 
-        if (!res.ok) {
-            throw new Error(`Proxy Error ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Proxy Error ${res.status}`);
 
         const textData = await res.text();
-        console.log("Raw Response:", textData); // Check for HTML errors here
-
-        let data;
-        try {
-            data = JSON.parse(textData);
-        } catch (e) {
-            throw new Error("Failed to parse JSON response: " + textData.substring(0, 100));
-        }
+        const data = JSON.parse(textData);
 
         if (data.candidates && data.candidates[0].content) {
             return data.candidates[0].content.parts[0].text;
         } else if (data.error) {
             throw new Error("Gemini Error: " + JSON.stringify(data.error));
         } else {
-            throw new Error("No content returned.");
+            throw new Error("No content.");
         }
-
     } catch (error) {
-        console.error("API Call Failed Details:", error);
+        console.error(error);
         throw error;
     }
 }
 
-// --- 7. Display Utils ---
+// --- 8. Display Utils ---
 function displayMessage(role, text, imageUrl = null) {
     if (!chatMessages) return;
-
     const div = document.createElement("div");
     div.classList.add("bubble");
     div.classList.add(role === "user" ? "user-bubble" : "nero-bubble");
@@ -228,7 +233,6 @@ function displayMessage(role, text, imageUrl = null) {
         img.className = "chat-image";
         div.appendChild(img);
     }
-
     if (text) {
         const contentDiv = document.createElement("div");
         if (role === "nero" && typeof marked !== 'undefined') {
@@ -247,7 +251,7 @@ function showTyping() {
     const div = document.createElement("div");
     div.id = "typing-indicator";
     div.className = "typing";
-    div.innerText = "Nero is thinking...";
+    div.textContent = "Nero is thinking...";
     chatMessages.appendChild(div);
     scrollToBottom();
 }
@@ -266,7 +270,6 @@ function handleExport() {
     alert("Exported to Console.");
 }
 
-// --- 8. Persistence ---
 function saveToHistory(role, text, image = null) {
     chatLog.push({ role, text, image });
     localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog));
@@ -278,4 +281,5 @@ function loadHistory() {
         chatLog = JSON.parse(data);
         chatLog.forEach(msg => displayMessage(msg.role, msg.text, msg.image));
     }
+    setTimeout(scrollToBottom, 100);
 }

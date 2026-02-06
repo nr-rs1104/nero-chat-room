@@ -3,45 +3,99 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- max-scale 1.0 prevents zoom on input focus for iOS -->
     <title>NeroSanctuary</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
 <body>
 
-    <!-- Chat Display Area -->
-    <div id="chat-messages">
-        <!-- Messages appended here -->
-    </div>
+    <!-- Main View Container -->
+    <main id="main-container">
 
-    <!-- Input Area -->
-    <div id="input-area">
-        <button id="upload-btn" class="icon-btn">
-            <i class="ph ph-image"></i>
-        </button>
-        <!-- Correct ID as requested -->
-        <input type="file" id="image-input" accept="image/*" style="display:none" multiple>
+        <!-- === VIEW 1: CONVERSATION === -->
+        <section id="view-chat" class="view active-view">
+            <!-- Messages -->
+            <div id="chat-messages">
+                <!-- Messages appended here -->
+            </div>
 
-        <textarea id="chat-input" placeholder="メッセージを入力..." rows="1"></textarea>
+            <!-- Input Area (Now part of the flow, not fixed) -->
+            <div id="input-area">
+                <button id="upload-btn" class="icon-btn">
+                    <i class="ph ph-image"></i>
+                </button>
+                <input type="file" id="image-input" accept="image/*" style="display:none" multiple>
 
-        <button id="send-btn" class="icon-btn">
-            <i class="ph ph-paper-plane-right"></i>
-        </button>
-    </div>
+                <textarea id="chat-input" placeholder="言葉を紡ぐ..." rows="1"></textarea>
 
-    <!-- Floating Controls -->
-    <div id="floating-controls">
-        <button id="export-btn" title="Log Export" class="control-btn">
-            <i class="ph ph-file-csv"></i>
+                <button id="send-btn" class="icon-btn">
+                    <i class="ph ph-paper-plane-right"></i>
+                </button>
+            </div>
+
+            <!-- Floating Rabbit (Only in Chat) -->
+            <button id="panic-btn" title="Emergency Rabbit">
+                <span>🐰</span>
+            </button>
+        </section>
+
+        <!-- === VIEW 2: MEMORY === -->
+        <section id="view-memory" class="view">
+            <div class="content-wrapper">
+                <h2>Memory Archives</h2>
+                <div id="memory-content" class="markdown-body">
+                    <!-- RISA_PROFILE content will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- === VIEW 3: SETTINGS === -->
+        <section id="view-settings" class="view">
+            <div class="content-wrapper">
+                <h2>Sanctuary Settings</h2>
+
+                <div class="setting-item">
+                    <label>Log Export</label>
+                    <button id="export-btn" class="settings-btn">
+                        <i class="ph ph-file-csv"></i> Export Chat Logs
+                    </button>
+                    <p class="desc">Save your conversation history to the Console (CSV format).</p>
+                </div>
+
+                <div class="setting-item">
+                    <label>System Status</label>
+                    <div class="status-indicator">
+                        <span class="dot online"></span> Nero is Active
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <label>Version</label>
+                    <p class="desc">v13.0 (Mobile Optimized)</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="bottom-tabs">
+        <button class="tab-btn active" data-target="view-chat">
+            <i class="ph ph-chat-circle-text"></i>
+            <span>Talk</span>
         </button>
-        <button id="panic-btn" title="Emergency Rabbit" class="control-btn"
-            style="background: rgba(255,255,255,0.1); border-color: #ffb7c5;">
-            <span style="font-size: 24px;">🐰</span>
+        <button class="tab-btn" data-target="view-memory">
+            <i class="ph ph-book-open-text"></i>
+            <span>Memory</span>
         </button>
-    </div>
+        <button class="tab-btn" data-target="view-settings">
+            <i class="ph ph-gear"></i>
+            <span>Config</span>
+        </button>
+    </nav>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
