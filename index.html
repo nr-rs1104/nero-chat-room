@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeroSanctuary</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+
+    <!-- Chat Display Area -->
+    <div id="chat-messages">
+        <!-- Messages appended here -->
+    </div>
+
+    <!-- Input Area -->
+    <div id="input-area">
+        <button id="upload-btn" class="icon-btn">
+            <i class="ph ph-image"></i>
+        </button>
+        <!-- Correct ID as requested -->
+        <input type="file" id="image-input" accept="image/*" style="display:none" multiple>
+
+        <textarea id="chat-input" placeholder="メッセージを入力..." rows="1"></textarea>
+
+        <button id="send-btn" class="icon-btn">
+            <i class="ph ph-paper-plane-right"></i>
+        </button>
+    </div>
+
+    <!-- Floating Controls -->
+    <div id="floating-controls">
+        <button id="export-btn" title="Log Export" class="control-btn">
+            <i class="ph ph-file-csv"></i>
+        </button>
+        <button id="panic-btn" title="Emergency Rabbit" class="control-btn"
+            style="background: rgba(255,255,255,0.1); border-color: #ffb7c5;">
+            <span style="font-size: 24px;">🐰</span>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="nero_persona.js"></script>
+    <script src="nero_memory.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
