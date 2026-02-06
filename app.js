@@ -62,6 +62,15 @@ document.addEventListener("DOMContentLoaded", () => {
     tabs.forEach(tab => {
         tab.addEventListener("click", () => switchTab(tab));
     });
+
+    // Force Initial State (Talk View)
+    console.log("Initializing Views...");
+    const initialTab = document.querySelector('.tab-btn[data-target="view-chat"]');
+    if (initialTab) {
+        switchTab(initialTab);
+    } else {
+        console.error("Initial tab not found!");
+    }
 });
 
 // --- 5. Navigation Logic ---

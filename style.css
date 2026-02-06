@@ -39,14 +39,14 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  display: none;
+  display: none !important;
   /* Hidden by default */
   background: var(--bg-color);
   flex-direction: column;
 }
 
 .view.active-view {
-  display: flex;
+  display: flex !important;
   z-index: 10;
 }
 
