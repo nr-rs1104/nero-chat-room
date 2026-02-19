@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbyBAHpREtyEUDUK8wlBD1s-xWtv56ip7gYU0MJRhw_pQL6Hw2SY62tsyXdxVEAvQj4-uA/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbwaRFAzNk7Y6Nd3EIuDPc1sSgfjyz9WuM90Qu08f-EcsMoedU8P5l_lV5XBnARbX-W5AA/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -63,6 +63,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (exportBtn) exportBtn.addEventListener("click", handleExport);
     if (syncBtn) syncBtn.addEventListener("click", fetchHistoryFromCloud);
 
+    // Memory UI Listeners
+    const btnAddMem = document.getElementById("btn-add-memory");
+    const btnSaveMem = document.getElementById("btn-save-memory");
+    const btnCancelMem = document.getElementById("btn-cancel-memory");
+
+    if (btnAddMem) btnAddMem.addEventListener("click", () => openMemoryModal("add"));
+    if (btnSaveMem) btnSaveMem.addEventListener("click", saveMemory);
+    if (btnCancelMem) btnCancelMem.addEventListener("click", closeMemoryModal);
+
     // Event Listeners: Tabs
     tabs.forEach(tab => {
         tab.addEventListener("click", () => switchTab(tab));
@@ -94,15 +103,189 @@ function switchTab(clickedTab) {
     });
 
     if (targetId === "view-chat") scrollToBottom();
+    if (targetId === "view-memory") fetchMemories();
+}
+
+// --- 6. Memory Management Logic ---
+let memories = [];
+
+async function fetchMemories() {
+    const list = document.getElementById("memory-list");
+    if (list) list.innerHTML = '<div class="loading-spinner">Loading Memories...</div>';
+
+    // We reuse the PROXY_URL using the same pattern.
+    const payload = { action: "getMemories" };
+
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.memories && Array.isArray(data.memories)) {
+            memories = data.memories;
+            renderMemories(memories);
+            if (document.getElementById("sync-status")) {
+                document.getElementById("sync-status").textContent = "Synced";
+            }
+        } else {
+            console.warn("No memories returned", data);
+            list.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No memories found.</div>';
+        }
+    } catch (e) {
+        console.error("Fetch Memories Failed:", e);
+        list.innerHTML = '<div style="color:#f66; text-align:center;">Failed to load memories.</div>';
+    }
+}
+
+function renderMemories(listData) {
+    const container = document.getElementById("memory-list");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (listData.length === 0) {
+        container.innerHTML = '<div style="color:#888; text-align:center; padding:20px;">No memories yet. Add one!</div>';
+        return;
+    }
+
+    listData.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "memory-card";
+
+        const h4 = document.createElement("h4");
+        h4.textContent = item.category || "General";
+
+        const p = document.createElement("p");
+        p.textContent = item.content;
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "card-btn edit";
+        btnEdit.innerHTML = '<i class="ph ph-pencil-simple"></i>';
+        btnEdit.onclick = () => openMemoryModal("edit", item);
+
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "card-btn delete";
+        btnDelete.innerHTML = '<i class="ph ph-trash"></i>';
+        btnDelete.onclick = () => deleteMemory(item.id);
+
+        actions.appendChild(btnEdit);
+        actions.appendChild(btnDelete);
+
+        card.appendChild(h4);
+        card.appendChild(p);
+        card.appendChild(actions);
+        container.appendChild(card);
+    });
+}
+
+// --- Modal & Actions ---
+function openMemoryModal(mode, item = null) {
+    const modal = document.getElementById("memory-modal");
+    const title = document.getElementById("modal-title");
+    const idInput = document.getElementById("memory-id");
+    const catInput = document.getElementById("memory-category");
+    const txtInput = document.getElementById("memory-text");
+
+    if (!modal) return;
+
+    modal.classList.remove("hidden");
+
+    if (mode === "edit" && item) {
+        title.textContent = "Edit Memory";
+        idInput.value = item.id;
+        catInput.value = item.category;
+        txtInput.value = item.content;
+    } else {
+        title.textContent = "New Memory";
+        idInput.value = "";
+        catInput.value = "";
+        txtInput.value = "";
+    }
+}
+
+function closeMemoryModal() {
+    const modal = document.getElementById("memory-modal");
+    if (modal) modal.classList.add("hidden");
+}
+
+async function saveMemory() {
+    const id = document.getElementById("memory-id").value;
+    const category = document.getElementById("memory-category").value.trim();
+    const content = document.getElementById("memory-text").value.trim();
+
+    if (!content) {
+        alert("Content is required!");
+        return;
+    }
+
+    const action = id ? "updateMemory" : "addMemory";
+    const payload = {
+        action: action,
+        id: id,
+        category: category,
+        content: content
+    };
+
+    // UI Feedback
+    const btnSave = document.getElementById("btn-save-memory");
+    const originalText = btnSave.textContent;
+    btnSave.textContent = "Saving...";
+    btnSave.disabled = true;
+
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            closeMemoryModal();
+            fetchMemories(); // Refresh list
+        } else {
+            alert("Error saving: " + JSON.stringify(data));
+        }
+    } catch (e) {
+        console.error("Save Failed:", e);
+        alert("Save Failed. Check console.");
+    } finally {
+        btnSave.textContent = originalText;
+        btnSave.disabled = false;
+    }
+}
+
+async function deleteMemory(id) {
+    if (!confirm("Are you sure you want to delete this memory?")) return;
+
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "deleteMemory", id: id })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            fetchMemories();
+        } else {
+            alert("Delete failed: " + JSON.stringify(data));
+        }
+    } catch (e) {
+        console.error("Delete Failed:", e);
+    }
 }
 
 function initMemoryView() {
-    const container = document.getElementById("memory-content");
-    if (container && typeof RISA_PROFILE !== 'undefined') {
-        container.textContent = RISA_PROFILE.trim();
-    } else if (container) {
-        container.textContent = "(Profile not loaded)";
-    }
+    // Initial load logic if needed, but we call fetchMemories on tab switch or load
+    // For now, we just placeholder or leave it empty until fetch
 }
 
 // --- 6. Cloud Sync Logic ---
