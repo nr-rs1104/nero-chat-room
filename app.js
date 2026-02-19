@@ -263,6 +263,10 @@ async function saveMemory() {
 }
 
 async function deleteMemory(id) {
+    if (!id) {
+        alert("Error: Memory ID is missing.");
+        return;
+    }
     if (!confirm("Are you sure you want to delete this memory?")) return;
 
     try {
@@ -276,7 +280,7 @@ async function deleteMemory(id) {
         if (data.success) {
             fetchMemories();
         } else {
-            alert("Delete failed: " + JSON.stringify(data));
+            alert("Delete failed: " + (data.error || "Unknown"));
         }
     } catch (e) {
         console.error("Delete Failed:", e);
