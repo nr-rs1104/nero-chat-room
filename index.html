@@ -4,45 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- max-scale 1.0 prevents zoom on input focus for iOS -->
     <title>NeroSanctuary</title>
+
+    <link rel="manifest" href="manifest.json">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
 <body>
-
-    <!-- Main View Container -->
     <main id="main-container">
 
-        <!-- === VIEW 1: CONVERSATION === -->
         <section id="view-chat" class="view active-view">
-            <!-- Messages -->
-            <div id="chat-messages">
-                <!-- Messages appended here -->
-            </div>
-
-            <!-- Input Area (Now part of the flow, not fixed) -->
+            <div id="chat-messages"></div>
             <div id="input-area">
-                <button id="upload-btn" class="icon-btn">
-                    <i class="ph ph-image"></i>
-                </button>
+                <button id="upload-btn" class="icon-btn"><i class="ph ph-image"></i></button>
                 <input type="file" id="image-input" accept="image/*" style="display:none" multiple>
-
                 <textarea id="chat-input" placeholder="言葉を紡ぐ..." rows="1"></textarea>
-
-                <button id="send-btn" class="icon-btn">
-                    <i class="ph ph-paper-plane-right"></i>
-                </button>
+                <button id="send-btn" class="icon-btn"><i class="ph ph-paper-plane-right"></i></button>
             </div>
-
-            <!-- Floating Rabbit (Only in Chat) -->
-            <button id="panic-btn" title="Emergency Rabbit">
-                <span>🐰</span>
-            </button>
+            <button id="panic-btn" title="Emergency Rabbit"><span>🐰</span></button>
         </section>
 
-        <!-- === VIEW 2: MEMORY === -->
         <section id="view-memory" class="view">
             <div class="content-wrapper">
                 <h2>Memory Archives</h2>
@@ -50,33 +38,24 @@
                     <div class="memory-stats" style="color: #888; font-size: 12px;">
                         <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
                     </div>
-                    <button id="btn-add-memory" class="action-btn">
-                        <i class="ph ph-plus"></i> New Memory
-                    </button>
+                    <button id="btn-add-memory" class="action-btn"><i class="ph ph-plus"></i> New Memory</button>
                 </div>
-
                 <div id="memory-list" class="memory-grid">
-                    <!-- Dynamic Memory Cards will appear here -->
                     <div class="loading-spinner">Loading Memories...</div>
                 </div>
             </div>
-
-            <!-- Edit/Add Modal -->
             <div id="memory-modal" class="modal hidden">
                 <div class="modal-content">
                     <h3 id="modal-title">New Memory</h3>
                     <input type="hidden" id="memory-id">
-
                     <div class="form-group">
                         <label>Category</label>
                         <input type="text" id="memory-category" placeholder="e.g. Profile, Likes, Secret">
                     </div>
-
                     <div class="form-group">
                         <label>Content</label>
                         <textarea id="memory-text" rows="5" placeholder="Memory details..."></textarea>
                     </div>
-
                     <div class="modal-actions">
                         <button id="btn-cancel-memory" class="secondary-btn">Cancel</button>
                         <button id="btn-save-memory" class="primary-btn">Save</button>
@@ -85,60 +64,39 @@
             </div>
         </section>
 
-        <!-- === VIEW 3: SETTINGS === -->
         <section id="view-settings" class="view">
             <div class="content-wrapper">
                 <h2>Sanctuary Settings</h2>
-
                 <div class="setting-item">
                     <label>Log Export</label>
-                    <button id="export-btn" class="settings-btn">
-                        <i class="ph ph-file-csv"></i> Export Chat Logs
-                    </button>
-                    <p class="desc">Save your conversation history to the Console (CSV format).</p>
+                    <button id="export-btn" class="settings-btn"><i class="ph ph-file-csv"></i> Export Chat
+                        Logs</button>
                 </div>
-
                 <div class="setting-item">
                     <label>Cloud Sync</label>
-                    <button id="sync-btn" class="settings-btn">
-                        <i class="ph ph-arrows-clockwise"></i> Force Sync
-                    </button>
-                    <p class="desc">Fetch latest history from Google Sheets.</p>
+                    <button id="sync-btn" class="settings-btn"><i class="ph ph-arrows-clockwise"></i> Force
+                        Sync</button>
                 </div>
-
                 <div class="setting-item">
                     <label>System Status</label>
-                    <div class="status-indicator">
-                        <span class="dot online"></span> Nero is Active
-                    </div>
+                    <div class="status-indicator"><span class="dot online"></span> Nero is Active</div>
                 </div>
-
                 <div class="setting-item">
                     <label>Version</label>
-                    <p class="desc">v13.0 (Mobile Optimized + Cloud)</p>
+                    <p class="desc">v14.1 (PWA Enabled)</p>
                 </div>
             </div>
         </section>
-
     </main>
 
-    <!-- Bottom Navigation -->
     <nav id="bottom-tabs">
-        <button class="tab-btn active" data-target="view-chat">
-            <i class="ph ph-chat-circle-text"></i>
-            <span>Talk</span>
-        </button>
-        <button class="tab-btn" data-target="view-memory">
-            <i class="ph ph-book-open-text"></i>
-            <span>Memory</span>
-        </button>
-        <button class="tab-btn" data-target="view-settings">
-            <i class="ph ph-gear"></i>
-            <span>Config</span>
-        </button>
+        <button class="tab-btn active" data-target="view-chat"><i
+                class="ph ph-chat-circle-text"></i><span>Talk</span></button>
+        <button class="tab-btn" data-target="view-memory"><i
+                class="ph ph-book-open-text"></i><span>Memory</span></button>
+        <button class="tab-btn" data-target="view-settings"><i class="ph ph-gear"></i><span>Config</span></button>
     </nav>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="nero_persona.js"></script>
     <script src="nero_memory.js"></script>
