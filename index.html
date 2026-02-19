@@ -46,11 +46,41 @@
         <section id="view-memory" class="view">
             <div class="content-wrapper">
                 <h2>Memory Archives</h2>
-                <div class="memory-stats" style="margin-bottom: 10px; color: #888; font-size: 12px;">
-                    <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
+                <div class="memory-header">
+                    <div class="memory-stats" style="color: #888; font-size: 12px;">
+                        <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
+                    </div>
+                    <button id="btn-add-memory" class="action-btn">
+                        <i class="ph ph-plus"></i> New Memory
+                    </button>
                 </div>
-                <div id="memory-content" class="markdown-body">
-                    <!-- RISA_PROFILE content will be injected here -->
+
+                <div id="memory-list" class="memory-grid">
+                    <!-- Dynamic Memory Cards will appear here -->
+                    <div class="loading-spinner">Loading Memories...</div>
+                </div>
+            </div>
+
+            <!-- Edit/Add Modal -->
+            <div id="memory-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h3 id="modal-title">New Memory</h3>
+                    <input type="hidden" id="memory-id">
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="memory-category" placeholder="e.g. Profile, Likes, Secret">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea id="memory-text" rows="5" placeholder="Memory details..."></textarea>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button id="btn-cancel-memory" class="secondary-btn">Cancel</button>
+                        <button id="btn-save-memory" class="primary-btn">Save</button>
+                    </div>
                 </div>
             </div>
         </section>
