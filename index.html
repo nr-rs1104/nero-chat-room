@@ -8,8 +8,14 @@
 
     <link rel="manifest" href="manifest.json">
     <script>
+        // Service Workerの登録を完全に解除し、キャッシュを無効化する
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                    console.log("[PWA Clear] Service Worker Unregistered");
+                }
+            });
         }
     </script>
 
