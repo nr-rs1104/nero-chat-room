@@ -61,8 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initPortal();
 
     tabs.forEach(tab => tab.addEventListener("click", () => switchTab(tab)));
-    const initialTab = document.querySelector('.tab-btn[data-target="view-chat"]');
-    if (initialTab) switchTab(initialTab);
+    // ポータル画面を維持するため、初期化時の switchTab(initialTab) の実行は削除
 });
 
 // --- 4.5 Portal Initialization ---
@@ -78,25 +77,27 @@ function initPortal() {
     const btnOffice = document.getElementById("btn-office");
     if (btnOffice) {
         btnOffice.addEventListener("click", () => {
+            // ポータルを隠し、チャットUIを表示
             document.getElementById("portal-screen").style.display = "none";
             document.getElementById("main-container").style.display = "flex";
             document.getElementById("bottom-tabs").style.display = "flex";
+
+            // 初めてチャット画面をアクティブにする
+            const initialTab = document.querySelector('.tab-btn[data-target="view-chat"]');
+            if (initialTab) switchTab(initialTab);
         });
     }
 
-    // Spreadsheet Placeholders
-    const dummyUrl = "https://script.google.com/macros/s/AKfycbxQ3sBedKL5xun7iiKE3NfLsk-D8b8astxrP-KRYmOnqCjr-Mu41e91kSp585bFi-EEMw/exec";
-
     document.getElementById("btn-observation")?.addEventListener("click", () => {
-        window.open(dummyUrl + "#gid=DIARY_LOGS_GID", "_blank");
+        window.open(PROXY_URL + "?gid=DIARY_LOGS_GID", "_blank"); // #gidだとGASでうまく飛ばないことがあるので?gid想定にしつつPROXY_URLを使用
     });
 
     document.getElementById("btn-conditioning")?.addEventListener("click", () => {
-        window.open(dummyUrl + "#gid=MEMORIES_GID", "_blank");
+        window.open(PROXY_URL + "?gid=MEMORIES_GID", "_blank");
     });
 
     document.getElementById("btn-archive")?.addEventListener("click", () => {
-        window.open(dummyUrl + "#gid=ARCHIVED_LOGS_GID", "_blank");
+        window.open(PROXY_URL + "?gid=ARCHIVED_LOGS_GID", "_blank");
     });
 }
 
