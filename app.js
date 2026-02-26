@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbyrUROtPO4Ma4Wya08zPeK7OfX7oyPJ3PTRB_ZCn4X3P1tfBr4KUpSDvea_z69s4EQXvQ/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbx4_GjIKAxsgrC3PxTUfCXLSvxf6n82Dy-V2URA_tCESG6XgMWduMuDwi5lMIOjlnHO/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -15,6 +15,7 @@ let currentArchivedLogs = [];
 let currentDeskLogs = [];
 let currentCalendarEvents = [];
 let pendingImage = null; // 🌟 送信待ちの画像を保持するにゃん
+let testDiaryBtn;
 
 // --- 3. DOM Elements ---
 let chatMessages, chatInput, sendBtn, uploadBtn, imageInput, panicBtn, exportBtn, syncBtn, syncStatus;
@@ -31,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     exportBtn = document.getElementById("export-btn");
     syncBtn = document.getElementById("sync-btn");
     syncStatus = document.getElementById("sync-status");
+    testDiaryBtn = document.getElementById("test-diary-btn");
     tabs = document.querySelectorAll(".tab-btn");
     views = document.querySelectorAll(".view");
 
@@ -59,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (panicBtn) panicBtn.addEventListener("click", handlePanic);
     if (exportBtn) exportBtn.addEventListener("click", handleExport);
     if (syncBtn) syncBtn.addEventListener("click", fetchHistoryFromCloud);
+    if (testDiaryBtn) testDiaryBtn.addEventListener("click", handleForceDiary);
 
     document.getElementById("btn-add-memory")?.addEventListener("click", () => openMemoryModal("add"));
     document.getElementById("btn-save-memory")?.addEventListener("click", saveMemory);
@@ -355,10 +358,10 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
         // Gemini高負荷時の待機とリトライ
         if (isOverloaded) {
             if (retryCount >= 1) { // 1度だけ自動リトライしてダメならネロ様メッセージ
-                return "理沙、どうやら今、双子たち（Gemini）が少し騒がしいようだ。頭を冷やす時間を与えよう。\nシステムが混み合っているため、数分後に再度声をかけてくれるか？";
+                return "ネロ様が少しお考え中のようです。数分後に再度お声がけください";
             }
-            // 5〜10秒ほど待機 (8秒)して1回だけリトライ
-            const backoffTime = 8000;
+            // 20秒待機して1回だけリトライ (429回避用)
+            const backoffTime = 20000;
             console.warn(`[Nero Retry] Gemini Overloaded. Retrying in ${backoffTime}ms (Attempt ${retryCount + 1})`);
             await new Promise(r => setTimeout(r, backoffTime));
             return callNeroProxy(logText, history, imageObj, retryCount + 1);
@@ -370,7 +373,7 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
     } catch (error) {
         console.error("[Nero Fetch Error]", error);
         // 通常のエラーやネットワーク切断時でもアプリが止まらないよう優しく返す
-        return "理沙、通信にノイズが混ざり、声が届かなかったようだ。\n一時的な障害か、電波が悪いかもしれない。少し待ってから、もう一度話しかけてくれ。\n[Error: " + error.message + "]";
+        return "ネロ様が少しお考え中のようです。数分後に再度お声がけください";
     }
 }
 
@@ -448,6 +451,33 @@ function openMemoryModal(m, i) { /* (Memory Modal 処理) */ }
 function closeMemoryModal() { /* (Memory Modal 処理) */ }
 function handleExport() { console.table(chatLog); }
 async function saveMemory() { /* (Memory Save 処理) */ }
+
+async function handleForceDiary() {
+    if (!confirm("本当に今すぐ強制的に日記を作成しますか？")) return;
+    const btn = document.getElementById("test-diary-btn");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Generating...';
+    btn.disabled = true;
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "forceDiary" })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("日記作成テスト完了！\\n\\n【作成されたメッセージ】\\n" + (data.summary || "生成なし（ログ不足など）"));
+            currentDiaryLogs = []; // clear cache
+        } else {
+            alert("エラーが発生しました: " + (data.error || "Unknown error"));
+        }
+    } catch (e) {
+        alert("通信エラー: " + e.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
 
 async function fetchDiaryLogs() {
     const now = Date.now();
