@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbxQ3sBedKL5xun7iiKE3NfLsk-D8b8astxrP-KRYmOnqCjr-Mu41e91kSp585bFi-EEMw/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbygBMZIrdJa2zLrXamvW8uCWMDeyqLzyweHliUNQULjFUADuyYBXnhlCF4XbAGBrHgdtQ/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -210,7 +210,7 @@ async function handleImageUpload(e) {
             data: reader.result.split(",")[1],
             mimeType: file.type
         };
-        displayMessage("system", "画像をセットしたにゃん！メッセージを入力して送信してね🐾");
+        displayMessage("system", "画像をセット済み、メッセージを入力して送信");
     };
     reader.readAsDataURL(file);
 }
@@ -349,5 +349,79 @@ function openMemoryModal(m, i) { /* (Memory Modal 処理) */ }
 function closeMemoryModal() { /* (Memory Modal 処理) */ }
 function handleExport() { console.table(chatLog); }
 async function saveMemory() { /* (Memory Save 処理) */ }
-async function deleteMemory(id) { /* (Memory Delete 処理) */ }
-function initMemoryView() { }
+
+async function fetchDiaryLogs() {
+    const list = document.getElementById("diary-list");
+    if (list) list.innerHTML = '<div class="loading-spinner">Reading Observation Logs...</div>';
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "getDiaryLogs" })
+        });
+        const data = await res.json();
+        if (data.logs) {
+            renderDiaryLogs(data.logs);
+        }
+    } catch (e) {
+        console.error(e);
+        if (list) list.innerHTML = '<div class="error-msg">Failed to retrieve logs.</div>';
+    }
+}
+
+function renderDiaryLogs(logData) {
+    const list = document.getElementById("diary-list");
+    if (!list) return;
+    list.innerHTML = "";
+
+    if (logData.length === 0) {
+        list.innerHTML = "<p>No logs available.</p>";
+        return;
+    }
+
+    logData.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "diary-bubble";
+
+        let dateStr = "Unknown Date";
+        if (item.updatedAt) {
+            const date = new Date(item.updatedAt);
+            if (!isNaN(date.getTime())) {
+                dateStr = date.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            } else {
+                dateStr = String(item.updatedAt);
+            }
+        }
+
+        div.innerHTML = `
+            <span class="diary-date">[ ${dateStr} ]</span>
+            <div class="diary-text">${item.content}</div>
+        `;
+        list.appendChild(div);
+    });
+}
+
+async function deleteMemory(id) {
+    if (!confirm("Are you sure you want to delete this memory?")) return;
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "deleteMemory", id: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            fetchMemories();
+        } else {
+            alert("Delete failed.");
+        }
+    } catch (e) { console.error(e); }
+}
+
+function initMemoryView() {
+    document.getElementById("btn-back-portal")?.addEventListener("click", () => {
+        document.getElementById("portal-screen").style.display = "flex";
+        document.getElementById("main-container").style.display = "none";
+        document.getElementById("bottom-tabs").style.display = "none";
+    });
+}
