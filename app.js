@@ -67,7 +67,14 @@ document.addEventListener("DOMContentLoaded", () => {
     initPortal();
 
     tabs.forEach(tab => tab.addEventListener("click", () => switchTab(tab)));
-    // ポータル画面を維持するため、初期化時の switchTab(initialTab) の実行は削除
+
+    // 🌟 Init Background
+    const savedBgUrl = localStorage.getItem("sanctuary_bg");
+    if (savedBgUrl) {
+        applyBackground(savedBgUrl);
+        const bgInput = document.getElementById("bg-url-input");
+        if (bgInput) bgInput.value = savedBgUrl;
+    }
 });
 
 // --- 4.5 Portal Initialization ---
@@ -708,4 +715,31 @@ function renderCalendar(eventData) {
         `;
         calendar.appendChild(div);
     });
+}
+
+// --- 11. Settings & UI Extensions ---
+document.getElementById("btn-set-bg")?.addEventListener("click", () => {
+    const url = document.getElementById("bg-url-input").value.trim();
+    applyBackground(url);
+    localStorage.setItem("sanctuary_bg", url);
+});
+
+document.querySelectorAll(".bg-preset").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        const url = e.target.dataset.url;
+        const bgInput = document.getElementById("bg-url-input");
+        if (bgInput) bgInput.value = url;
+        applyBackground(url);
+        localStorage.setItem("sanctuary_bg", url);
+    });
+});
+
+function applyBackground(url) {
+    const bgEl = document.getElementById("app-bg");
+    if (!bgEl) return;
+    if (url) {
+        bgEl.style.backgroundImage = `url('${url}')`;
+    } else {
+        bgEl.style.backgroundImage = "none";
+    }
 }

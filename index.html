@@ -18,6 +18,7 @@
 </head>
 
 <body>
+    <div id="app-bg"></div>
     <!-- 💥 DOM PORTAL SCREEN -->
     <div id="portal-screen">
         <div class="portal-content">
@@ -172,6 +173,25 @@
                     <label>Log Export</label>
                     <button id="export-btn" class="settings-btn"><i class="ph ph-file-csv"></i> Export Chat
                         Logs</button>
+                </div>
+                <!-- 🌟 Background Setting -->
+                <div class="setting-item">
+                    <label>Sanctuary Background</label>
+                    <div style="display:flex; gap:5px; margin-top:5px; margin-bottom:10px;">
+                        <input type="text" id="bg-url-input" placeholder="Image URL..."
+                            style="flex:1; background:#111; color:#fff; border:1px solid #333; padding:8px; border-radius:4px; font-size:12px;">
+                        <button id="btn-set-bg" class="settings-btn" style="width:auto; padding:0 15px;">Set</button>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="settings-btn bg-preset" data-url=""
+                            style="width:auto; padding:5px 10px; font-size:11px;">Default (Black)</button>
+                        <button class="settings-btn bg-preset"
+                            data-url="https://images.unsplash.com/photo-1550592704-6c7bdef5aaf1?q=80&w=1000&auto=format&fit=crop"
+                            style="width:auto; padding:5px 10px; font-size:11px;">Study</button>
+                        <button class="settings-btn bg-preset"
+                            data-url="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1000&auto=format&fit=crop"
+                            style="width:auto; padding:5px 10px; font-size:11px;">Night Sky</button>
+                    </div>
                 </div>
                 <div class="setting-item">
                     <label>Cloud Sync</label>
