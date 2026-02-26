@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbwQF-ZqUIQRc8Z-VcCZDWsfnAfAcx08XmLCozCTgMGZUheBoFxdXVRqGqkgSOd2lWhSCA/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbxPfDt8auW3C82JKjBJU-P5tw4Jyti2kzMWEf8KNxqsKYR1nNTZKo9xzbFhBDGX9I0xLA/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -594,12 +594,16 @@ function renderArchivedLogs(logData, keyword = "") {
             }
         }
 
-        let highlightedContent = item.message;
-        let highlightedRole = item.role;
+        let formattedContent = formatTextForDisplay(item.message);
+        let formattedRole = formatTextForDisplay(item.role);
+
+        let highlightedContent = formattedContent;
+        let highlightedRole = formattedRole;
+
         if (keyword) {
             const regex = new RegExp(`(${keyword})`, 'gi');
-            highlightedContent = highlightedContent.replace(regex, '<mark class="highlight">$1</mark>');
-            highlightedRole = String(item.role).replace(regex, '<mark class="highlight">$1</mark>');
+            highlightedContent = formattedContent.replace(regex, '<mark class="highlight">$1</mark>');
+            highlightedRole = formattedRole.replace(regex, '<mark class="highlight">$1</mark>');
         }
 
         div.innerHTML = `
