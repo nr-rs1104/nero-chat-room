@@ -111,8 +111,21 @@ function initPortal() {
 function showView(targetId) {
     const portal = document.getElementById("portal-screen");
     const mainContainer = document.getElementById("main-container");
-    if (portal) portal.style.display = "none";
-    if (mainContainer) mainContainer.style.display = "flex";
+    const bottomTabs = document.getElementById("bottom-tabs");
+
+    if (portal) {
+        portal.style.display = "none";
+        portal.style.zIndex = "-1"; // Ensure it's pushed back if it ever glitches
+    }
+
+    if (mainContainer) {
+        mainContainer.style.display = "flex";
+        mainContainer.style.zIndex = "10";
+    }
+
+    if (bottomTabs) {
+        bottomTabs.style.display = "flex";
+    }
 
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
     const view = document.getElementById(targetId);
