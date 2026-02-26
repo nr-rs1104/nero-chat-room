@@ -134,14 +134,24 @@ function showView(targetId) {
     if (view) view.classList.add("active-view");
 
     if (targetId === "view-chat") scrollToBottom();
-    if (targetId === "view-memory") fetchMemories();
-    if (targetId === "view-logs") fetchDiaryLogs();
-    if (targetId === "view-archive") fetchArchivedLogs();
-    if (targetId === "view-desk") fetchDeskData();
+    if (targetId === "view-memory") setTimeout(() => fetchMemories(), 500); // 0.5s遅延
+    if (targetId === "view-logs") setTimeout(() => fetchDiaryLogs(), 1000); // 1s遅延
+    if (targetId === "view-archive") setTimeout(() => fetchArchivedLogs(), 1500); // 1.5s遅延
+    if (targetId === "view-desk") fetchDeskData(); // デスクは即時
 }
+
+// (スロットリング用タイムスタンプ)
+let lastFetchTime = { memory: 0, diary: 0, archive: 0, desk: 0 };
+const THROTTLE_MS = 30 * 1000; // 30秒
 
 // (中略: Fetch/Render Memories Logic は変更なしだにゃん)
 async function fetchMemories() {
+    const now = Date.now();
+    if (now - lastFetchTime.memory < THROTTLE_MS && currentMemories.length > 0) {
+        console.log("Using cached Memory data.");
+        renderMemories(currentMemories);
+        return;
+    }
     const list = document.getElementById("memory-list");
     if (list) list.innerHTML = '<div class="loading-spinner">Loading...</div>';
     try {
@@ -332,8 +342,14 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
             body: JSON.stringify(requestBody)
         });
 
-        if (res.status === 503 && retryCount < 1) {
-            await new Promise(r => setTimeout(r, 2000));
+        if (res.status === 503) {
+            if (retryCount >= 3) {
+                return "The Sanctuary connection is currently overloaded (503). Nero will attempt to reach out later. Please tell me again in a few minutes.";
+            }
+            // 指数バックオフ: 1回目=1s, 2回目=3s, 3回目=5s くらい
+            const backoffTime = [1000, 3000, 5000][retryCount] || 5000;
+            console.warn(`[Nero Retry] 503 Error. Retrying in ${backoffTime}ms (Attempt ${retryCount + 1})`);
+            await new Promise(r => setTimeout(r, backoffTime));
             return callNeroProxy(logText, history, imageObj, retryCount + 1);
         }
 
@@ -419,6 +435,12 @@ function handleExport() { console.table(chatLog); }
 async function saveMemory() { /* (Memory Save 処理) */ }
 
 async function fetchDiaryLogs() {
+    const now = Date.now();
+    if (now - lastFetchTime.diary < THROTTLE_MS && currentDiaryLogs && currentDiaryLogs.length > 0) {
+        console.log("Using cached Diary data.");
+        renderDiaryLogs(currentDiaryLogs);
+        return;
+    }
     const list = document.getElementById("diary-list");
     if (list) list.innerHTML = '<div class="loading-spinner">Reading Observation Logs...</div>';
     try {
@@ -430,6 +452,7 @@ async function fetchDiaryLogs() {
         const data = await res.json();
         if (data.logs) {
             currentDiaryLogs = data.logs;
+            lastFetchTime.diary = Date.now();
             renderDiaryLogs(currentDiaryLogs);
         }
     } catch (e) {
@@ -580,6 +603,12 @@ function returnToPortal() {
 }
 
 async function fetchArchivedLogs() {
+    const now = Date.now();
+    if (now - lastFetchTime.archive < THROTTLE_MS && currentArchivedLogs && currentArchivedLogs.length > 0) {
+        console.log("Using cached Archive data.");
+        renderArchivedLogs(currentArchivedLogs);
+        return;
+    }
     const list = document.getElementById("archive-list");
     if (list) list.innerHTML = '<div class="loading-spinner">Accessing Archive Data...</div>';
     try {
@@ -591,6 +620,7 @@ async function fetchArchivedLogs() {
         const data = await res.json();
         if (data.logs) {
             currentArchivedLogs = data.logs;
+            lastFetchTime.archive = Date.now();
             renderArchivedLogs(currentArchivedLogs);
         }
     } catch (e) {
@@ -651,6 +681,14 @@ function renderArchivedLogs(logData, keyword = "") {
 
 // --- 10. The Desk Logic ---
 async function fetchDeskData() {
+    const now = Date.now();
+    if (now - lastFetchTime.desk < THROTTLE_MS && currentDeskLogs && currentDeskLogs.length > 0) {
+        console.log("Using cached Desk data.");
+        renderDeskBoard(currentDeskLogs);
+        renderCalendar(currentCalendarEvents);
+        return;
+    }
+
     const board = document.getElementById("desk-board");
     const calendar = document.getElementById("desk-calendar");
     if (board) board.innerHTML = '<div class="loading-spinner">Reading directives...</div>';
@@ -666,6 +704,7 @@ async function fetchDeskData() {
 
         if (data.deskLogs) {
             currentDeskLogs = data.deskLogs;
+            lastFetchTime.desk = Date.now();
             renderDeskBoard(currentDeskLogs);
         }
         if (data.calendarEvents) {
