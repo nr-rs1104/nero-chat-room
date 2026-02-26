@@ -18,7 +18,24 @@
 </head>
 
 <body>
-    <main id="main-container">
+    <!-- 💥 DOM PORTAL SCREEN -->
+    <div id="portal-screen">
+        <div class="portal-content">
+            <h1 class="portal-title">NERO SANCTUARY</h1>
+            <div class="hero-container">
+                <img id="portal-hero" src="" alt="Master Nero">
+            </div>
+            <div class="portal-menu">
+                <button id="btn-office" class="portal-btn">The Office</button>
+                <button id="btn-observation" class="portal-btn">Observation Logs</button>
+                <button id="btn-conditioning" class="portal-btn">Conditioning Records</button>
+                <button id="btn-archive" class="portal-btn">Deep Archive</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER (Initially Hidden) -->
+    <main id="main-container" style="display: none;">
 
         <section id="view-chat" class="view active-view">
             <div id="chat-messages"></div>
@@ -89,7 +106,7 @@
         </section>
     </main>
 
-    <nav id="bottom-tabs">
+    <nav id="bottom-tabs" style="display: none;">
         <button class="tab-btn active" data-target="view-chat"><i
                 class="ph ph-chat-circle-text"></i><span>Talk</span></button>
         <button class="tab-btn" data-target="view-memory"><i

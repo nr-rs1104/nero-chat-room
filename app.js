@@ -57,11 +57,48 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-add-memory")?.addEventListener("click", () => openMemoryModal("add"));
     document.getElementById("btn-save-memory")?.addEventListener("click", saveMemory);
     document.getElementById("btn-cancel-memory")?.addEventListener("click", closeMemoryModal);
+    // --- Portal Logic ---
+    initPortal();
 
     tabs.forEach(tab => tab.addEventListener("click", () => switchTab(tab)));
     const initialTab = document.querySelector('.tab-btn[data-target="view-chat"]');
     if (initialTab) switchTab(initialTab);
 });
+
+// --- 4.5 Portal Initialization ---
+function initPortal() {
+    // 1. Random Image Selection
+    const heroImage = document.getElementById("portal-hero");
+    if (heroImage) {
+        const randomNum = Math.floor(Math.random() * 4) + 1; // 1 to 4
+        heroImage.src = `hero${randomNum}.png`;
+    }
+
+    // 2. Button Listeners
+    const btnOffice = document.getElementById("btn-office");
+    if (btnOffice) {
+        btnOffice.addEventListener("click", () => {
+            document.getElementById("portal-screen").style.display = "none";
+            document.getElementById("main-container").style.display = "flex";
+            document.getElementById("bottom-tabs").style.display = "flex";
+        });
+    }
+
+    // Spreadsheet Placeholders
+    const dummyUrl = "https://script.google.com/macros/s/AKfycbxQ3sBedKL5xun7iiKE3NfLsk-D8b8astxrP-KRYmOnqCjr-Mu41e91kSp585bFi-EEMw/exec";
+
+    document.getElementById("btn-observation")?.addEventListener("click", () => {
+        window.open(dummyUrl + "#gid=DIARY_LOGS_GID", "_blank");
+    });
+
+    document.getElementById("btn-conditioning")?.addEventListener("click", () => {
+        window.open(dummyUrl + "#gid=MEMORIES_GID", "_blank");
+    });
+
+    document.getElementById("btn-archive")?.addEventListener("click", () => {
+        window.open(dummyUrl + "#gid=ARCHIVED_LOGS_GID", "_blank");
+    });
+}
 
 // --- 5. Navigation Logic ---
 function switchTab(clickedTab) {
