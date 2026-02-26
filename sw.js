@@ -1,4 +1,4 @@
-const CACHE_NAME = "nero-sanctuary-v1";
+const CACHE_NAME = "nero-sanctuary-v2";
 const ASSETS = [
     "./",
     "./index.html",
@@ -23,6 +23,12 @@ self.addEventListener("install", (e) => {
 
 // Fetch Event: Serve from Cache, then Network
 self.addEventListener("fetch", (e) => {
+    // GASなどへのPOST通信はキャッシュを通さない
+    if (e.request.method !== "GET") {
+        e.respondWith(fetch(e.request));
+        return;
+    }
+
     e.respondWith(
         caches.match(e.request).then((r) => {
             console.log("[Service Worker] Fetching resource: " + e.request.url);
