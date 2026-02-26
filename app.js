@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbxk1904ydfQG8OyBBJIXNH1-hYC_FwUgzoq2KFjRYjxcO0A_mnqBqrXDc3a_KGY-hX7Lg/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbxk1904ydfQG8OyBBJIXNH1-hYC_FwUgzoq2KFfRYjxcO0A_mnqBqrXDc3a_KGY-hX7Lg/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -117,20 +117,59 @@ async function fetchMemories() {
     try {
         const res = await fetch(PROXY_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify({ action: "getMemories" }) });
         const data = await res.json();
-        if (data.memories) { memories = data.memories; renderMemories(memories); }
-    } catch (e) { console.error(e); }
+        if (data.memories) {
+            memories = data.memories;
+            renderMemories(memories);
+        } else {
+            if (list) list.innerHTML = '<div class="error-msg">Failed to retrieve memories.</div>';
+        }
+    } catch (e) {
+        console.error(e);
+        if (list) list.innerHTML = '<div class="error-msg">Network Error.</div>';
+    }
 }
 
-function renderMemories(listData) {
+function renderMemories(listData, keyword = "") {
     const container = document.getElementById("memory-list");
-    if (!container) return; container.innerHTML = "";
-    listData.forEach(item => {
-        const card = document.createElement("div"); card.className = "memory-card";
-        card.innerHTML = `<h4>${item.category || "General"}</h4><p>${item.content}</p>`;
-        const actions = document.createElement("div"); actions.className = "card-actions";
-        const btnDelete = document.createElement("button"); btnDelete.className = "card-btn delete"; btnDelete.innerHTML = '<i class="ph ph-trash"></i>';
+    if (!container) return;
+    container.innerHTML = "";
+
+    let displayData = listData;
+    if (keyword) {
+        const lowerKw = keyword.toLowerCase();
+        displayData = listData.filter(item =>
+            String(item.category).toLowerCase().includes(lowerKw) ||
+            String(item.content).toLowerCase().includes(lowerKw)
+        );
+    }
+
+    if (displayData.length === 0) {
+        container.innerHTML = "<p>No memories available" + (keyword ? " for this search." : ".") + "</p>";
+        return;
+    }
+
+    displayData.forEach(item => {
+        let highlightedCategory = item.category || "General";
+        let highlightedContent = item.content;
+
+        if (keyword) {
+            const regex = new RegExp(`(${keyword})`, 'gi');
+            highlightedCategory = String(highlightedCategory).replace(regex, '<mark class="highlight">$1</mark>');
+            highlightedContent = String(highlightedContent).replace(regex, '<mark class="highlight">$1</mark>');
+        }
+
+        const card = document.createElement("div");
+        card.className = "memory-card";
+        card.innerHTML = `<h4>${highlightedCategory}</h4><p>${highlightedContent}</p>`;
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const btnDelete = document.createElement("button");
+        btnDelete.className = "card-btn delete";
+        btnDelete.innerHTML = '<i class="ph ph-trash"></i>';
         btnDelete.onclick = () => deleteMemory(item.id);
-        actions.appendChild(btnDelete); card.appendChild(actions); container.appendChild(card);
+        actions.appendChild(btnDelete);
+        card.appendChild(actions);
+        container.appendChild(card);
     });
 }
 
@@ -434,6 +473,24 @@ function initMemoryView() {
     document.querySelectorAll(".btn-back-portal").forEach(btn => {
         btn.addEventListener("click", returnToPortal);
     });
+
+    // Search event listeners for Memories
+    const searchMemoryBtn = document.getElementById("search-memory-btn");
+    const clearMemoryBtn = document.getElementById("clear-memory-btn");
+    const searchMemoryInput = document.getElementById("search-memory-input");
+
+    if (searchMemoryBtn && searchMemoryInput) {
+        searchMemoryBtn.addEventListener("click", () => renderMemories(memories, searchMemoryInput.value));
+        searchMemoryInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") renderMemories(memories, searchMemoryInput.value);
+        });
+    }
+    if (clearMemoryBtn && searchMemoryInput) {
+        clearMemoryBtn.addEventListener("click", () => {
+            searchMemoryInput.value = "";
+            renderMemories(memories);
+        });
+    }
 
     // Search event listeners for Diary Logs
     const searchDiaryBtn = document.getElementById("search-diary-btn");
