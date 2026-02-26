@@ -11,7 +11,8 @@ let chatLog = [];
 let memories = [];
 let isVoiceMode = false;
 let currentDiaryLogs = [];
-let currentArchivedLogs = []; // 🌟 送信待ちの画像を保持するにゃん
+let currentArchivedLogs = [];
+let pendingImage = null; // 🌟 送信待ちの画像を保持するにゃん
 
 // --- 3. DOM Elements ---
 let chatMessages, chatInput, sendBtn, uploadBtn, imageInput, panicBtn, exportBtn, syncBtn, syncStatus;
@@ -82,15 +83,22 @@ function initPortal() {
         btnOffice.addEventListener("click", () => showView("view-chat"));
     }
 
-    document.getElementById("btn-observation")?.addEventListener("click", () => showView("view-logs"));
-    document.getElementById("btn-conditioning")?.addEventListener("click", () => showView("view-memory"));
-    document.getElementById("btn-archive")?.addEventListener("click", () => showView("view-archive"));
+    const btnObservation = document.getElementById("btn-observation");
+    if (btnObservation) btnObservation.addEventListener("click", () => showView("view-logs"));
+
+    const btnConditioning = document.getElementById("btn-conditioning");
+    if (btnConditioning) btnConditioning.addEventListener("click", () => showView("view-memory"));
+
+    const btnArchive = document.getElementById("btn-archive");
+    if (btnArchive) btnArchive.addEventListener("click", () => showView("view-archive"));
 }
 
 // --- 5. Navigation Logic ---
 function showView(targetId) {
-    document.getElementById("portal-screen").style.display = "none";
-    document.getElementById("main-container").style.display = "flex";
+    const portal = document.getElementById("portal-screen");
+    const mainContainer = document.getElementById("main-container");
+    if (portal) portal.style.display = "none";
+    if (mainContainer) mainContainer.style.display = "flex";
 
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
     const view = document.getElementById(targetId);
@@ -465,8 +473,10 @@ function initMemoryView() {
 }
 
 function returnToPortal() {
-    document.getElementById("portal-screen").style.display = "flex";
-    document.getElementById("main-container").style.display = "none";
+    const portal = document.getElementById("portal-screen");
+    const mainContainer = document.getElementById("main-container");
+    if (portal) portal.style.display = "flex";
+    if (mainContainer) mainContainer.style.display = "none";
 }
 
 async function fetchArchivedLogs() {
