@@ -1,4 +1,4 @@
-const CACHE_NAME = "nero-sanctuary-v2";
+const CACHE_NAME = "nero-sanctuary-v3";
 const ASSETS = [
     "./",
     "./index.html",
@@ -12,7 +12,7 @@ const ASSETS = [
 
 // Install Event: Cache Core Assets
 self.addEventListener("install", (e) => {
-    console.log("[Service Worker] Install");
+    console.log("[Service Worker] Install (v3)");
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             console.log("[Service Worker] Caching all: app shell and content");
@@ -21,9 +21,9 @@ self.addEventListener("install", (e) => {
     );
 });
 
-// Fetch Event: Serve from Cache, then Network
+// Fetch Event: Serve from Cache, then Network (GET ONLY)
 self.addEventListener("fetch", (e) => {
-    // GASなどへのPOST通信はキャッシュを通さない
+    // GASなどへのPOST通信はキャッシュを通さず確実にスルーする
     if (e.request.method !== "GET") {
         e.respondWith(fetch(e.request));
         return;
@@ -35,7 +35,6 @@ self.addEventListener("fetch", (e) => {
             return r || fetch(e.request).then((response) => {
                 return caches.open(CACHE_NAME).then((cache) => {
                     // Cache new resources dynamically (optional, but good for fonts/icons)
-                    // limit to same origin or specific CDNs to avoid bloating
                     if (e.request.url.startsWith("http")) {
                         cache.put(e.request, response.clone());
                     }
@@ -48,10 +47,12 @@ self.addEventListener("fetch", (e) => {
 
 // Activate Event: Clean up old caches
 self.addEventListener("activate", (e) => {
+    console.log("[Service Worker] Activate (v3)");
     e.waitUntil(
         caches.keys().then((keyList) => {
             return Promise.all(keyList.map((key) => {
                 if (key !== CACHE_NAME) {
+                    console.log("[Service Worker] Removing old cache", key);
                     return caches.delete(key);
                 }
             }));

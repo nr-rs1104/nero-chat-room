@@ -562,8 +562,21 @@ function initMemoryView() {
 function returnToPortal() {
     const portal = document.getElementById("portal-screen");
     const mainContainer = document.getElementById("main-container");
-    if (portal) portal.style.display = "flex";
-    if (mainContainer) mainContainer.style.display = "none";
+    const bottomTabs = document.getElementById("bottom-tabs");
+
+    if (portal) {
+        portal.style.display = "flex";
+        portal.style.visibility = "visible";
+        portal.style.pointerEvents = "auto";
+        portal.style.zIndex = "9999";
+    }
+    if (mainContainer) {
+        mainContainer.style.display = "none";
+        mainContainer.style.zIndex = "";
+    }
+    if (bottomTabs) {
+        bottomTabs.style.display = "none";
+    }
 }
 
 async function fetchArchivedLogs() {
