@@ -69,13 +69,15 @@ body {
   height: 100%;
   display: none !important;
   /* Hidden by default */
-  background: transparent !important;
+  background-color: rgba(15, 15, 15, 0.75) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
   flex-direction: column;
 }
 
 .view.active-view {
   display: flex !important;
-  z-index: 10;
+  z-index: 25;
 }
 
 /* === CHAT VIEW === */
@@ -83,7 +85,6 @@ body {
   /* Holds messages + input */
   display: flex;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .chat-header {
