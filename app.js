@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbygBMZIrdJa2zLrXamvW8uCWMDeyqLzyweHliUNQULjFUADuyYBXnhlCF4XbAGBrHgdtQ/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbznl_Om1PZQrgotq6C4EpLepmwVDXU1-YTi0LicJZUIzrcYkG5Hgc9MQdQ-HbOsHggdSA/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -89,11 +89,26 @@ function initPortal() {
     }
 
     document.getElementById("btn-observation")?.addEventListener("click", () => {
-        window.open(PROXY_URL + "?gid=DIARY_LOGS_GID", "_blank"); // #gidだとGASでうまく飛ばないことがあるので?gid想定にしつつPROXY_URLを使用
+        // Switch to native Observation Logs view instead of window.open
+        document.getElementById("portal-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        document.getElementById("bottom-tabs").style.display = "none"; // Hide tabs to maintain immersion
+
+        // Custom view switch
+        document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
+        document.getElementById("view-logs").classList.add("active-view");
+
+        fetchDiaryLogs();
     });
 
     document.getElementById("btn-conditioning")?.addEventListener("click", () => {
-        window.open(PROXY_URL + "?gid=MEMORIES_GID", "_blank");
+        // Switch to native Memory view instead of window.open
+        document.getElementById("portal-screen").style.display = "none";
+        document.getElementById("main-container").style.display = "flex";
+        document.getElementById("bottom-tabs").style.display = "flex"; // Tabs visible in settings
+
+        const memTab = document.querySelector('.tab-btn[data-target="view-memory"]');
+        if (memTab) switchTab(memTab);
     });
 
     document.getElementById("btn-archive")?.addEventListener("click", () => {
@@ -419,9 +434,14 @@ async function deleteMemory(id) {
 }
 
 function initMemoryView() {
-    document.getElementById("btn-back-portal")?.addEventListener("click", () => {
-        document.getElementById("portal-screen").style.display = "flex";
-        document.getElementById("main-container").style.display = "none";
-        document.getElementById("bottom-tabs").style.display = "none";
-    });
+    // Return to Portal Button from Logs
+    document.getElementById("btn-back-portal")?.addEventListener("click", returnToPortal);
+    // Return to Portal Button from Office (Chat header logic handled in HTML/CSS)
+    document.getElementById("btn-back-office-portal")?.addEventListener("click", returnToPortal);
+}
+
+function returnToPortal() {
+    document.getElementById("portal-screen").style.display = "flex";
+    document.getElementById("main-container").style.display = "none";
+    document.getElementById("bottom-tabs").style.display = "none";
 }
