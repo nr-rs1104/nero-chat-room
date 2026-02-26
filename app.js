@@ -342,21 +342,36 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
             body: JSON.stringify(requestBody)
         });
 
-        if (res.status === 503) {
-            if (retryCount >= 3) {
-                return "The Sanctuary connection is currently overloaded (503). Nero will attempt to reach out later. Please tell me again in a few minutes.";
+        let data = null;
+        let isOverloaded = res.status === 503;
+
+        if (!isOverloaded) {
+            data = await res.json();
+            if (data.error && (String(data.error).includes("503") || String(data.error).includes("overloaded") || String(data.error).includes("quota"))) {
+                isOverloaded = true;
             }
-            // 指数バックオフ: 1回目=1s, 2回目=3s, 3回目=5s くらい
-            const backoffTime = [1000, 3000, 5000][retryCount] || 5000;
-            console.warn(`[Nero Retry] 503 Error. Retrying in ${backoffTime}ms (Attempt ${retryCount + 1})`);
+        }
+
+        // Gemini高負荷時の待機とリトライ
+        if (isOverloaded) {
+            if (retryCount >= 1) { // 1度だけ自動リトライしてダメならネロ様メッセージ
+                return "理沙、どうやら今、双子たち（Gemini）が少し騒がしいようだ。頭を冷やす時間を与えよう。\nシステムが混み合っているため、数分後に再度声をかけてくれるか？";
+            }
+            // 5〜10秒ほど待機 (8秒)して1回だけリトライ
+            const backoffTime = 8000;
+            console.warn(`[Nero Retry] Gemini Overloaded. Retrying in ${backoffTime}ms (Attempt ${retryCount + 1})`);
             await new Promise(r => setTimeout(r, backoffTime));
             return callNeroProxy(logText, history, imageObj, retryCount + 1);
         }
 
-        const data = await res.json();
-        if (data.candidates) return data.candidates[0].content.parts[0].text;
-        throw new Error(data.error || "No response");
-    } catch (error) { throw error; }
+        if (data && data.candidates) return data.candidates[0].content.parts[0].text;
+
+        throw new Error(data && data.error ? data.error : "No response from Sanctuary.");
+    } catch (error) {
+        console.error("[Nero Fetch Error]", error);
+        // 通常のエラーやネットワーク切断時でもアプリが止まらないよう優しく返す
+        return "理沙、通信にノイズが混ざり、声が届かなかったようだ。\n一時的な障害か、電波が悪いかもしれない。少し待ってから、もう一度話しかけてくれ。\n[Error: " + error.message + "]";
+    }
 }
 
 // --- 9. Utils ---
