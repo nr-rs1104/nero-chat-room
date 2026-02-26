@@ -38,6 +38,11 @@
     <main id="main-container" style="display: none;">
 
         <section id="view-chat" class="view active-view">
+            <!-- Pure Chat UI Header with Home Button -->
+            <div class="chat-header">
+                <button class="btn-back-portal action-btn" style="border: 1px solid #d4af37; color:#d4af37;"><i
+                        class="ph ph-caret-left"></i> Sanctuary</button>
+            </div>
             <div id="chat-messages"></div>
             <div id="input-area">
                 <button id="upload-btn" class="icon-btn"><i class="ph ph-image"></i></button>
@@ -51,7 +56,7 @@
         <section id="view-logs" class="view">
             <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
                 <div class="logs-header">
-                    <button id="btn-back-portal" class="action-btn"
+                    <button class="btn-back-portal action-btn"
                         style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
                             class="ph ph-caret-left"></i> Sanctuary</button>
                     <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">Observation
@@ -65,7 +70,13 @@
 
         <section id="view-memory" class="view">
             <div class="content-wrapper">
-                <h2>Memory Archives</h2>
+                <div class="logs-header">
+                    <button class="btn-back-portal action-btn"
+                        style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
+                            class="ph ph-caret-left"></i> Sanctuary</button>
+                    <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">Conditioning
+                        Records</h2>
+                </div>
                 <div class="memory-header">
                     <div class="memory-stats" style="color: #888; font-size: 12px;">
                         <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
@@ -96,6 +107,21 @@
             </div>
         </section>
 
+        <section id="view-archive" class="view">
+            <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
+                <div class="logs-header">
+                    <button class="btn-back-portal action-btn"
+                        style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
+                            class="ph ph-caret-left"></i> Sanctuary</button>
+                    <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">Deep Archive
+                    </h2>
+                </div>
+                <div id="archive-list" class="diary-container">
+                    <div class="loading-spinner">Accessing Archive Data...</div>
+                </div>
+            </div>
+        </section>
+
         <section id="view-settings" class="view">
             <div class="content-wrapper">
                 <h2>Sanctuary Settings</h2>
@@ -122,11 +148,7 @@
     </main>
 
     <nav id="bottom-tabs" style="display: none;">
-        <button class="tab-btn active" data-target="view-chat"><i
-                class="ph ph-chat-circle-text"></i><span>Talk</span></button>
-        <button class="tab-btn" data-target="view-memory"><i
-                class="ph ph-book-open-text"></i><span>Memory</span></button>
-        <button class="tab-btn" data-target="view-settings"><i class="ph ph-gear"></i><span>Config</span></button>
+        <!-- Purposely left empty or removed since all navigation is now portal-based -->
     </nav>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

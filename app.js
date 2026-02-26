@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbznl_Om1PZQrgotq6C4EpLepmwVDXU1-YTi0LicJZUIzrcYkG5Hgc9MQdQ-HbOsHggdSA/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbxk1904ydfQG8OyBBJIXNH1-hYC_FwUgzoq2KFfRYjxcO0A_mnqBqrXDc3a_KGY-hX7Lg/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -76,54 +76,27 @@ function initPortal() {
     // 2. Button Listeners
     const btnOffice = document.getElementById("btn-office");
     if (btnOffice) {
-        btnOffice.addEventListener("click", () => {
-            // ポータルを隠し、チャットUIを表示
-            document.getElementById("portal-screen").style.display = "none";
-            document.getElementById("main-container").style.display = "flex";
-            document.getElementById("bottom-tabs").style.display = "flex";
-
-            // 初めてチャット画面をアクティブにする
-            const initialTab = document.querySelector('.tab-btn[data-target="view-chat"]');
-            if (initialTab) switchTab(initialTab);
-        });
+        btnOffice.addEventListener("click", () => showView("view-chat"));
     }
 
-    document.getElementById("btn-observation")?.addEventListener("click", () => {
-        // Switch to native Observation Logs view instead of window.open
-        document.getElementById("portal-screen").style.display = "none";
-        document.getElementById("main-container").style.display = "flex";
-        document.getElementById("bottom-tabs").style.display = "none"; // Hide tabs to maintain immersion
-
-        // Custom view switch
-        document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
-        document.getElementById("view-logs").classList.add("active-view");
-
-        fetchDiaryLogs();
-    });
-
-    document.getElementById("btn-conditioning")?.addEventListener("click", () => {
-        // Switch to native Memory view instead of window.open
-        document.getElementById("portal-screen").style.display = "none";
-        document.getElementById("main-container").style.display = "flex";
-        document.getElementById("bottom-tabs").style.display = "flex"; // Tabs visible in settings
-
-        const memTab = document.querySelector('.tab-btn[data-target="view-memory"]');
-        if (memTab) switchTab(memTab);
-    });
-
-    document.getElementById("btn-archive")?.addEventListener("click", () => {
-        window.open(PROXY_URL + "?gid=ARCHIVED_LOGS_GID", "_blank");
-    });
+    document.getElementById("btn-observation")?.addEventListener("click", () => showView("view-logs"));
+    document.getElementById("btn-conditioning")?.addEventListener("click", () => showView("view-memory"));
+    document.getElementById("btn-archive")?.addEventListener("click", () => showView("view-archive"));
 }
 
 // --- 5. Navigation Logic ---
-function switchTab(clickedTab) {
-    const targetId = clickedTab.dataset.target;
-    tabs.forEach(t => t.classList.remove("active"));
-    clickedTab.classList.add("active");
-    views.forEach(v => v.classList.toggle("active-view", v.id === targetId));
+function showView(targetId) {
+    document.getElementById("portal-screen").style.display = "none";
+    document.getElementById("main-container").style.display = "flex";
+
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));
+    const view = document.getElementById(targetId);
+    if (view) view.classList.add("active-view");
+
     if (targetId === "view-chat") scrollToBottom();
     if (targetId === "view-memory") fetchMemories();
+    if (targetId === "view-logs") fetchDiaryLogs();
+    if (targetId === "view-archive") fetchArchivedLogs();
 }
 
 // (中略: Fetch/Render Memories Logic は変更なしだにゃん)
@@ -434,14 +407,63 @@ async function deleteMemory(id) {
 }
 
 function initMemoryView() {
-    // Return to Portal Button from Logs
-    document.getElementById("btn-back-portal")?.addEventListener("click", returnToPortal);
-    // Return to Portal Button from Office (Chat header logic handled in HTML/CSS)
-    document.getElementById("btn-back-office-portal")?.addEventListener("click", returnToPortal);
+    document.querySelectorAll(".btn-back-portal").forEach(btn => {
+        btn.addEventListener("click", returnToPortal);
+    });
 }
 
 function returnToPortal() {
     document.getElementById("portal-screen").style.display = "flex";
     document.getElementById("main-container").style.display = "none";
-    document.getElementById("bottom-tabs").style.display = "none";
+}
+
+async function fetchArchivedLogs() {
+    const list = document.getElementById("archive-list");
+    if (list) list.innerHTML = '<div class="loading-spinner">Accessing Archive Data...</div>';
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "getArchivedLogs" })
+        });
+        const data = await res.json();
+        if (data.logs) {
+            renderArchivedLogs(data.logs);
+        }
+    } catch (e) {
+        console.error(e);
+        if (list) list.innerHTML = '<div class="error-msg">Failed to retrieve archive.</div>';
+    }
+}
+
+function renderArchivedLogs(logData) {
+    const list = document.getElementById("archive-list");
+    if (!list) return;
+    list.innerHTML = "";
+
+    if (logData.length === 0) {
+        list.innerHTML = "<p>No logs available in the archive.</p>";
+        return;
+    }
+
+    logData.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "diary-bubble";
+
+        let dateStr = "Unknown Date";
+        if (item.timestamp) {
+            const date = new Date(item.timestamp);
+            if (!isNaN(date.getTime())) {
+                dateStr = date.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            } else {
+                dateStr = String(item.timestamp);
+            }
+        }
+
+        div.innerHTML = `
+            <span class="diary-date">[ ${dateStr} ] - ${item.role}</span>
+            <div class="diary-text">${item.message}</div>
+        `;
+        list.appendChild(div);
+    });
 }
