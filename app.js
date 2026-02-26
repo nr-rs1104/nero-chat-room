@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbxPfDt8auW3C82JKjBJU-P5tw4Jyti2kzMWEf8KNxqsKYR1nNTZKo9xzbFhBDGX9I0xLA/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbyrUROtPO4Ma4Wya08zPeK7OfX7oyPJ3PTRB_ZCn4X3P1tfBr4KUpSDvea_z69s4EQXvQ/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -126,7 +126,7 @@ function showView(targetId) {
     }
 
     if (bottomTabs) {
-        bottomTabs.style.display = "flex";
+        bottomTabs.style.display = "none";
     }
 
     document.querySelectorAll(".view").forEach(v => v.classList.remove("active-view"));

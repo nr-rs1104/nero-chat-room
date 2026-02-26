@@ -36,8 +36,9 @@ function doPost(e) {
             finally { lock.releaseLock(); }
         }
         if (jsonData.action === "getDiaryLogs") {
-            var diarySheet = getOrCreateSheet(ss, "Diary_Logs");
-            return createJsonResponse({ logs: getAllMemories(diarySheet) });
+            var diarySheet = getOrCreateArchiveSheet(ss, "Diary_Logs");
+            var logs = getAllArchivedLogs(diarySheet).map(l => ({ updatedAt: l.timestamp, content: l.message }));
+            return createJsonResponse({ logs: logs });
         }
         if (jsonData.action === "getArchivedLogs") {
             var archiveSheet = getOrCreateArchiveSheet(ss, "Archived_Logs");
@@ -173,7 +174,7 @@ function generateDailyDiary() {
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var chatSheet = ss.getActiveSheet();
-    var diarySheet = getOrCreateSheet(ss, "Diary_Logs");
+    var diarySheet = getOrCreateArchiveSheet(ss, "Diary_Logs");
 
     var lastRow = chatSheet.getLastRow();
     if (lastRow <= 1) {
@@ -211,10 +212,7 @@ function generateDailyDiary() {
     var summary = summarizeForDiary(conversationText, apiKey, API_VERSION, MODEL_NAME, lastDiaryContext);
 
     if (summary) {
-        addMemory(diarySheet, {
-            category: "Diary",
-            content: summary
-        });
+        diarySheet.appendRow([new Date(), "Nero", summary]);
         console.log("Daily summary saved to Diary_Logs.");
 
         // 4. その後、退避処理を実行
@@ -459,7 +457,7 @@ function testArchive() {
         var activeModelName = "gemini-3-flash-preview";
 
         var lastDiaryContext = "";
-        var diarySheet = getOrCreateSheet(ss, "Diary_Logs");
+        var diarySheet = getOrCreateArchiveSheet(ss, "Diary_Logs");
         var diaryLastRow = diarySheet.getLastRow();
         if (diaryLastRow > 1) {
             lastDiaryContext = diarySheet.getRange(diaryLastRow, 3).getValue();
@@ -469,11 +467,8 @@ function testArchive() {
         console.log("TEST: Summary result: " + (summary ? "Success" : "Failed or Empty"));
 
         if (summary) {
-            var diarySheet = getOrCreateSheet(ss, "Diary_Logs");
-            addMemory(diarySheet, {
-                category: "Diary (Test)",
-                content: summary
-            });
+            var diarySheet = getOrCreateArchiveSheet(ss, "Diary_Logs");
+            diarySheet.appendRow([new Date(), "Nero (Test)", summary]);
             console.log("TEST: Summary added to Diary_Logs.");
 
             // 安全装置: 要約が成功した時だけログを移動・削除する
