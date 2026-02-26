@@ -271,9 +271,42 @@ function loadHistoryLogic() {
             const displayImg = (msg.image && msg.image !== "[Image]") ? msg.image : null;
             displayMessage(msg.role, msg.text, displayImg);
         });
+    } else {
+        // localStorageが空のため、起動時に自動でfetchHistoryFromCloudを実行
+        fetchHistoryFromCloud();
     }
 }
-async function fetchHistoryFromCloud() { /* (GASの getHistory を叩く既存処理はそのままにゃん) */ }
+async function fetchHistoryFromCloud() {
+    if (syncStatus) syncStatus.textContent = "Syncing...";
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST", // GAS向け
+            headers: { "Content-Type": "text/plain" }, // CORS回避用
+            body: JSON.stringify({ action: "getHistory" }) // GAS側でアクションを判定
+        });
+        const data = await res.json();
+
+        if (data.history && data.history.length > 0) {
+            // 現在の履歴をクラウドのもので上書き（もしくはマージ）
+            chatLog = data.history;
+            localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog));
+
+            // UIをクリアして再描画
+            if (chatMessages) chatMessages.innerHTML = "";
+            chatLog.forEach(msg => {
+                const displayImg = (msg.image && msg.image !== "[Image]") ? msg.image : null;
+                displayMessage(msg.role, msg.text, displayImg);
+            });
+            if (syncStatus) syncStatus.textContent = "Synced";
+        } else {
+            console.log("No history found in cloud.");
+            if (syncStatus) syncStatus.textContent = "No Data";
+        }
+    } catch (e) {
+        console.error("Cloud Sync Failed:", e);
+        if (syncStatus) syncStatus.textContent = "Error";
+    }
+}
 function openMemoryModal(m, i) { /* (Memory Modal 処理) */ }
 function closeMemoryModal() { /* (Memory Modal 処理) */ }
 function handleExport() { console.table(chatLog); }
