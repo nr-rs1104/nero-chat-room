@@ -4,11 +4,14 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbxk1904ydfQG8OyBBJIXNH1-hYC_FwUgzoq2KFfRYjxcO0A_mnqBqrXDc3a_KGY-hX7Lg/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbxk1904ydfQG8OyBBJIXNH1-hYC_FwUgzoq2KFjRYjxcO0A_mnqBqrXDc3a_KGY-hX7Lg/exec";
 
 // --- 2. State ---
 let chatLog = [];
-let pendingImage = null; // 🌟 送信待ちの画像を保持するにゃん
+let memories = [];
+let isVoiceMode = false;
+let currentDiaryLogs = [];
+let currentArchivedLogs = []; // 🌟 送信待ちの画像を保持するにゃん
 
 // --- 3. DOM Elements ---
 let chatMessages, chatInput, sendBtn, uploadBtn, imageInput, panicBtn, exportBtn, syncBtn, syncStatus;
@@ -349,7 +352,8 @@ async function fetchDiaryLogs() {
         });
         const data = await res.json();
         if (data.logs) {
-            renderDiaryLogs(data.logs);
+            currentDiaryLogs = data.logs;
+            renderDiaryLogs(currentDiaryLogs);
         }
     } catch (e) {
         console.error(e);
@@ -357,17 +361,23 @@ async function fetchDiaryLogs() {
     }
 }
 
-function renderDiaryLogs(logData) {
+function renderDiaryLogs(logData, keyword = "") {
     const list = document.getElementById("diary-list");
     if (!list) return;
     list.innerHTML = "";
 
-    if (logData.length === 0) {
-        list.innerHTML = "<p>No logs available.</p>";
+    let displayData = logData;
+    if (keyword) {
+        const lowerKw = keyword.toLowerCase();
+        displayData = logData.filter(item => String(item.content).toLowerCase().includes(lowerKw));
+    }
+
+    if (displayData.length === 0) {
+        list.innerHTML = "<p>No logs available" + (keyword ? " for this search." : ".") + "</p>";
         return;
     }
 
-    logData.forEach(item => {
+    displayData.forEach(item => {
         const div = document.createElement("div");
         div.className = "diary-bubble";
 
@@ -381,9 +391,15 @@ function renderDiaryLogs(logData) {
             }
         }
 
+        let highlightedContent = item.content;
+        if (keyword) {
+            const regex = new RegExp(`(${keyword})`, 'gi');
+            highlightedContent = highlightedContent.replace(regex, '<mark class="highlight">$1</mark>');
+        }
+
         div.innerHTML = `
             <span class="diary-date">[ ${dateStr} ]</span>
-            <div class="diary-text">${item.content}</div>
+            <div class="diary-text">${highlightedContent}</div>
         `;
         list.appendChild(div);
     });
@@ -410,6 +426,42 @@ function initMemoryView() {
     document.querySelectorAll(".btn-back-portal").forEach(btn => {
         btn.addEventListener("click", returnToPortal);
     });
+
+    // Search event listeners for Diary Logs
+    const searchDiaryBtn = document.getElementById("search-diary-btn");
+    const clearDiaryBtn = document.getElementById("clear-diary-btn");
+    const searchDiaryInput = document.getElementById("search-diary-input");
+
+    if (searchDiaryBtn && searchDiaryInput) {
+        searchDiaryBtn.addEventListener("click", () => renderDiaryLogs(currentDiaryLogs, searchDiaryInput.value));
+        searchDiaryInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") renderDiaryLogs(currentDiaryLogs, searchDiaryInput.value);
+        });
+    }
+    if (clearDiaryBtn && searchDiaryInput) {
+        clearDiaryBtn.addEventListener("click", () => {
+            searchDiaryInput.value = "";
+            renderDiaryLogs(currentDiaryLogs);
+        });
+    }
+
+    // Search event listeners for Archived Logs
+    const searchArchiveBtn = document.getElementById("search-archive-btn");
+    const clearArchiveBtn = document.getElementById("clear-archive-btn");
+    const searchArchiveInput = document.getElementById("search-archive-input");
+
+    if (searchArchiveBtn && searchArchiveInput) {
+        searchArchiveBtn.addEventListener("click", () => renderArchivedLogs(currentArchivedLogs, searchArchiveInput.value));
+        searchArchiveInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") renderArchivedLogs(currentArchivedLogs, searchArchiveInput.value);
+        });
+    }
+    if (clearArchiveBtn && searchArchiveInput) {
+        clearArchiveBtn.addEventListener("click", () => {
+            searchArchiveInput.value = "";
+            renderArchivedLogs(currentArchivedLogs);
+        });
+    }
 }
 
 function returnToPortal() {
@@ -428,7 +480,8 @@ async function fetchArchivedLogs() {
         });
         const data = await res.json();
         if (data.logs) {
-            renderArchivedLogs(data.logs);
+            currentArchivedLogs = data.logs;
+            renderArchivedLogs(currentArchivedLogs);
         }
     } catch (e) {
         console.error(e);
@@ -436,17 +489,23 @@ async function fetchArchivedLogs() {
     }
 }
 
-function renderArchivedLogs(logData) {
+function renderArchivedLogs(logData, keyword = "") {
     const list = document.getElementById("archive-list");
     if (!list) return;
     list.innerHTML = "";
 
-    if (logData.length === 0) {
-        list.innerHTML = "<p>No logs available in the archive.</p>";
+    let displayData = logData;
+    if (keyword) {
+        const lowerKw = keyword.toLowerCase();
+        displayData = logData.filter(item => String(item.message).toLowerCase().includes(lowerKw) || String(item.role).toLowerCase().includes(lowerKw));
+    }
+
+    if (displayData.length === 0) {
+        list.innerHTML = "<p>No logs available in the archive" + (keyword ? " for this search." : ".") + "</p>";
         return;
     }
 
-    logData.forEach(item => {
+    displayData.forEach(item => {
         const div = document.createElement("div");
         div.className = "diary-bubble";
 
@@ -460,9 +519,17 @@ function renderArchivedLogs(logData) {
             }
         }
 
+        let highlightedContent = item.message;
+        let highlightedRole = item.role;
+        if (keyword) {
+            const regex = new RegExp(`(${keyword})`, 'gi');
+            highlightedContent = highlightedContent.replace(regex, '<mark class="highlight">$1</mark>');
+            highlightedRole = String(item.role).replace(regex, '<mark class="highlight">$1</mark>');
+        }
+
         div.innerHTML = `
-            <span class="diary-date">[ ${dateStr} ] - ${item.role}</span>
-            <div class="diary-text">${item.message}</div>
+            <span class="diary-date">[ ${dateStr} ] - ${highlightedRole}</span>
+            <div class="diary-text">${highlightedContent}</div>
         `;
         list.appendChild(div);
     });

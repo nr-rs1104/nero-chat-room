@@ -53,6 +53,16 @@ body {
 /* === CHAT VIEW === */
 #view-chat {
   /* Holds messages + input */
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 10px 15px;
+  background-color: #111;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
 }
 
 #chat-messages {
@@ -565,6 +575,36 @@ h2 {
   display: block;
   font-family: monospace;
   letter-spacing: 1px;
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.search-bar input {
+  flex: 1;
+  background-color: #111;
+  color: #eee;
+  border: 1px solid #333;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-family: 'Shippori Mincho', 'Georgia', serif;
+  font-size: 14px;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+mark.highlight {
+  background-color: rgba(212, 175, 55, 0.4);
+  color: #fff;
+  padding: 0 3px;
+  border-radius: 2px;
 }
 
 .diary-text {
