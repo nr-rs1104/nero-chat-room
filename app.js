@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbxk1904ydfQG8OyBBJIXNH1-hYC_FwUgzoq2KFfRYjxcO0A_mnqBqrXDc3a_KGY-hX7Lg/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbwQF-ZqUIQRc8Z-VcCZDWsfnAfAcx08XmLCozCTgMGZUheBoFxdXVRqGqkgSOd2lWhSCA/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -12,6 +12,8 @@ let memories = [];
 let isVoiceMode = false;
 let currentDiaryLogs = [];
 let currentArchivedLogs = [];
+let currentDeskLogs = [];
+let currentCalendarEvents = [];
 let pendingImage = null; // 🌟 送信待ちの画像を保持するにゃん
 
 // --- 3. DOM Elements ---
@@ -78,6 +80,11 @@ function initPortal() {
     }
 
     // 2. Button Listeners
+    const btnDesk = document.getElementById("btn-desk");
+    if (btnDesk) {
+        btnDesk.addEventListener("click", () => showView("view-desk"));
+    }
+
     const btnOffice = document.getElementById("btn-office");
     if (btnOffice) {
         btnOffice.addEventListener("click", () => showView("view-chat"));
@@ -108,6 +115,7 @@ function showView(targetId) {
     if (targetId === "view-memory") fetchMemories();
     if (targetId === "view-logs") fetchDiaryLogs();
     if (targetId === "view-archive") fetchArchivedLogs();
+    if (targetId === "view-desk") fetchDeskData();
 }
 
 // (中略: Fetch/Render Memories Logic は変更なしだにゃん)
@@ -599,5 +607,101 @@ function renderArchivedLogs(logData, keyword = "") {
             <div class="diary-text">${highlightedContent}</div>
         `;
         list.appendChild(div);
+    });
+}
+
+// --- 10. The Desk Logic ---
+async function fetchDeskData() {
+    const board = document.getElementById("desk-board");
+    const calendar = document.getElementById("desk-calendar");
+    if (board) board.innerHTML = '<div class="loading-spinner">Reading directives...</div>';
+    if (calendar) calendar.innerHTML = '<div class="loading-spinner">Checking schedule...</div>';
+
+    try {
+        const res = await fetch(PROXY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ action: "getDeskData" })
+        });
+        const data = await res.json();
+
+        if (data.deskLogs) {
+            currentDeskLogs = data.deskLogs;
+            renderDeskBoard(currentDeskLogs);
+        }
+        if (data.calendarEvents) {
+            currentCalendarEvents = data.calendarEvents;
+            renderCalendar(currentCalendarEvents);
+        }
+    } catch (e) {
+        console.error("Desk Data Error:", e);
+        if (board) board.innerHTML = '<div class="error-msg">Failed to load directives.</div>';
+        if (calendar) calendar.innerHTML = '<div class="error-msg">Failed to load schedule.</div>';
+    }
+}
+
+function renderDeskBoard(logData) {
+    const board = document.getElementById("desk-board");
+    if (!board) return;
+    board.innerHTML = "";
+
+    if (logData.length === 0) {
+        board.innerHTML = "<p>No active directives.</p>";
+        return;
+    }
+
+    logData.slice().reverse().forEach(item => { // Display newest first
+        const div = document.createElement("div");
+        div.className = "desk-board-item";
+
+        div.innerHTML = `
+            <div style="color: #d4af37; margin-bottom: 5px; font-weight: bold;">[ ${item.category || "Directive"} ]</div>
+            <div>${item.content}</div>
+        `;
+        board.appendChild(div);
+    });
+}
+
+function renderCalendar(eventData) {
+    const calendar = document.getElementById("desk-calendar");
+    if (!calendar) return;
+    calendar.innerHTML = "";
+
+    if (eventData.length === 0) {
+        calendar.innerHTML = "<p>No upcoming events.</p>";
+        return;
+    }
+
+    // Attempt to handle date parsing to show a clean UI
+    eventData.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "calendar-event";
+
+        const dateStr = item.category || "Date";
+        const contentStr = item.content || "Event";
+
+        // Very basic parsing for visuals, assume simple category strings if not valid dates
+        let month = "NRO";
+        let day = "--";
+        const potentialDate = new Date(dateStr);
+        if (!isNaN(potentialDate.getTime())) {
+            month = potentialDate.toLocaleString('en-US', { month: 'short' });
+            day = potentialDate.getDate().toString().padStart(2, '0');
+        } else {
+            // If it's just a text like 'Tomorrow', use it directly or truncate
+            day = String(dateStr).substring(0, 3);
+        }
+
+        div.innerHTML = `
+            <div class="calendar-date">
+                <span class="calendar-date-month">${month}</span>
+                <span class="calendar-date-day">${day}</span>
+            </div>
+            <div class="calendar-details">
+                <div class="calendar-title">${contentStr}</div>
+                <div class="calendar-time">${dateStr}</div>
+            </div>
+        `;
+        calendar.appendChild(div);
     });
 }
