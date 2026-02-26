@@ -101,7 +101,20 @@ function renderMemories(listData) {
 
 async function sendMessage() {
     const text = chatInput.value.trim();
-    const image = pendingImage; // 🌟 待機中の画像があれば使うにゃん
+
+    // 🌟 画像プレビュー要素があれば優先的に取得、なければpendingImageを使用
+    const previewEl = document.querySelector(".chat-image-preview");
+    let image = null;
+    if (previewEl) {
+        image = {
+            preview: previewEl.src,
+            data: previewEl.dataset.data,
+            mimeType: previewEl.dataset.mimeType
+        };
+        previewEl.remove(); // 送信時に要素を削除
+    } else if (pendingImage) {
+        image = pendingImage; // Fallback
+    }
 
     if (!text && !image) return;
 
@@ -115,8 +128,8 @@ async function sendMessage() {
 
     try {
         showTyping();
-        // 🌟 画像があれば画像オブジェクトを渡すにゃん
-        const responseText = await callNeroProxy(text || "[Image Upload]", chatLog, image ? { mimeType: image.mimeType, data: image.data } : null);
+        // 🌟 RAG向けに生のtextを渡す
+        const responseText = await callNeroProxy(text, chatLog, image ? { mimeType: image.mimeType, data: image.data } : null);
         hideTyping();
         displayMessage("nero", responseText);
         saveToHistory("nero", responseText);
@@ -133,6 +146,26 @@ async function handleImageUpload(e) {
 
     const reader = new FileReader();
     reader.onload = async () => {
+        // 既存のプレビューがあれば削除
+        let existingPreview = document.querySelector(".chat-image-preview");
+        if (existingPreview) existingPreview.remove();
+
+        // プレビュー画像を生成して入力エリアに配置
+        const previewImg = document.createElement("img");
+        previewImg.src = reader.result;
+        previewImg.className = "chat-image-preview";
+        previewImg.dataset.mimeType = file.type;
+        previewImg.dataset.data = reader.result.split(",")[1];
+
+        previewImg.style.maxHeight = "50px";
+        previewImg.style.borderRadius = "8px";
+        previewImg.style.objectFit = "cover";
+
+        const inputArea = document.getElementById("input-area");
+        if (inputArea) {
+            inputArea.insertBefore(previewImg, document.getElementById("chat-input"));
+        }
+
         // 🌟 ここでは送らず「待機」させてプレビューだけ出すにゃん
         pendingImage = {
             preview: reader.result,
@@ -164,14 +197,22 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
     });
 
     // 🌟 ユーザーの最新発言 (テキスト+画像のセット)
-    const userParts = [{ text: logText }];
+    const userParts = [];
+    if (logText) {
+        userParts.push({ text: logText });
+    } else if (imageObj) {
+        userParts.push({ text: "画像が送信されました" });
+    } else {
+        userParts.push({ text: "." });
+    }
+
     if (imageObj) {
         userParts.push({ inlineData: imageObj });
     }
     contents.push({ role: "user", parts: userParts });
 
     const requestBody = {
-        logUser: logText,
+        logUser: logText, // RAG検索用に、Fallbackテキストを含まない純粋なユーザー発言を渡す
         geminiPayload: {
             contents: contents,
             generationConfig: { maxOutputTokens: 2048, temperature: 0.7 }
@@ -217,8 +258,21 @@ function displayMessage(role, text, imageUrl = null) {
 function showTyping() { if (!document.getElementById("typing-indicator")) { const div = document.createElement("div"); div.id = "typing-indicator"; div.className = "typing"; div.textContent = "Nero is thinking..."; chatMessages.appendChild(div); scrollToBottom(); } }
 function hideTyping() { document.getElementById("typing-indicator")?.remove(); }
 function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
-function saveToHistory(role, text, image = null) { chatLog.push({ role, text, image }); localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog)); }
-function loadHistoryLogic() { const data = localStorage.getItem("nero_logs_v12"); if (data) { chatLog = JSON.parse(data); chatLog.forEach(msg => displayMessage(msg.role, msg.text, msg.image)); } }
+function saveToHistory(role, text, image = null) {
+    chatLog.push({ role, text, image: image ? "[Image]" : null });
+    if (chatLog.length > 100) chatLog = chatLog.slice(-100);
+    try { localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog)); } catch (e) { console.error(e); }
+}
+function loadHistoryLogic() {
+    const data = localStorage.getItem("nero_logs_v12");
+    if (data) {
+        chatLog = JSON.parse(data);
+        chatLog.forEach(msg => {
+            const displayImg = (msg.image && msg.image !== "[Image]") ? msg.image : null;
+            displayMessage(msg.role, msg.text, displayImg);
+        });
+    }
+}
 async function fetchHistoryFromCloud() { /* (GASの getHistory を叩く既存処理はそのままにゃん) */ }
 function openMemoryModal(m, i) { /* (Memory Modal 処理) */ }
 function closeMemoryModal() { /* (Memory Modal 処理) */ }
