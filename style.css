@@ -32,7 +32,7 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1 !important;
+  z-index: -10 !important;
   background-color: var(--bg-color);
   background-size: cover;
   background-position: center;
@@ -83,6 +83,7 @@ body {
   /* Holds messages + input */
   display: flex;
   flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.4);
 }
 
 .chat-header {

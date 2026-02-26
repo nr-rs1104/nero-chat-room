@@ -115,6 +115,8 @@ function showView(targetId) {
 
     if (portal) {
         portal.style.display = "none";
+        portal.style.visibility = "hidden";
+        portal.style.pointerEvents = "none";
         portal.style.zIndex = "-1"; // Ensure it's pushed back if it ever glitches
     }
 
