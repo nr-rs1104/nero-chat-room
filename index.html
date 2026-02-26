@@ -101,154 +101,153 @@
                 </div>
             </details>
         </div>
+    </div> <!-- END OF PORTAL SCREEN -->
 
-        <!-- MAIN APP CONTAINER (Initially Hidden) -->
-        <main id="main-container" style="display: none;">
+    <!-- MAIN APP CONTAINER (Initially Hidden) -->
+    <main id="main-container" style="display: none;">
 
-            <section id="view-chat" class="view active-view">
-                <!-- Pure Chat UI Header with Home Button -->
-                <div class="chat-header">
-                    <button class="btn-back-portal action-btn" style="border: 1px solid #d4af37; color:#d4af37;"><i
+        <section id="view-chat" class="view active-view">
+            <!-- Pure Chat UI Header with Home Button -->
+            <div class="chat-header">
+                <button class="btn-back-portal action-btn" style="border: 1px solid #d4af37; color:#d4af37;"><i
+                        class="ph ph-caret-left"></i> Sanctuary</button>
+            </div>
+            <div id="chat-messages"></div>
+            <div id="input-area">
+                <button id="upload-btn" class="icon-btn"><i class="ph ph-image"></i></button>
+                <input type="file" id="image-input" accept="image/*" style="display:none" multiple>
+                <textarea id="chat-input" placeholder="言葉を紡ぐ..." rows="1"></textarea>
+                <button id="send-btn" class="icon-btn"><i class="ph ph-paper-plane-right"></i></button>
+            </div>
+            <button id="panic-btn" title="Emergency Rabbit"><span>🐰</span></button>
+        </section>
+
+        <section id="view-logs" class="view">
+            <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
+                <div class="logs-header">
+                    <button class="btn-back-portal action-btn"
+                        style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
                             class="ph ph-caret-left"></i> Sanctuary</button>
+                    <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">
+                        Observation
+                        Logs</h2>
                 </div>
-                <div id="chat-messages"></div>
-                <div id="input-area">
-                    <button id="upload-btn" class="icon-btn"><i class="ph ph-image"></i></button>
-                    <input type="file" id="image-input" accept="image/*" style="display:none" multiple>
-                    <textarea id="chat-input" placeholder="言葉を紡ぐ..." rows="1"></textarea>
-                    <button id="send-btn" class="icon-btn"><i class="ph ph-paper-plane-right"></i></button>
+                <div class="search-bar">
+                    <input type="text" id="search-diary-input" placeholder="Search Logs...">
+                    <button id="search-diary-btn" class="action-btn"><i class="ph ph-magnifying-glass"></i></button>
+                    <button id="clear-diary-btn" class="action-btn" title="Clear"><i class="ph ph-x"></i></button>
                 </div>
-                <button id="panic-btn" title="Emergency Rabbit"><span>🐰</span></button>
-            </section>
+                <div id="diary-list" class="diary-container">
+                    <div class="loading-spinner">Reading Logs...</div>
+                </div>
+            </div>
+        </section>
 
-            <section id="view-logs" class="view">
-                <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
-                    <div class="logs-header">
-                        <button class="btn-back-portal action-btn"
-                            style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
-                                class="ph ph-caret-left"></i> Sanctuary</button>
-                        <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">
-                            Observation
-                            Logs</h2>
+        <section id="view-memory" class="view">
+            <div class="content-wrapper">
+                <div class="logs-header">
+                    <button class="btn-back-portal action-btn"
+                        style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
+                            class="ph ph-caret-left"></i> Sanctuary</button>
+                    <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">
+                        Conditioning
+                        Records</h2>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="search-memory-input" placeholder="Search Memories...">
+                    <button id="search-memory-btn" class="action-btn"><i class="ph ph-magnifying-glass"></i></button>
+                    <button id="clear-memory-btn" class="action-btn" title="Clear"><i class="ph ph-x"></i></button>
+                </div>
+                <div class="memory-header">
+                    <div class="memory-stats" style="color: #888; font-size: 12px;">
+                        <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
                     </div>
-                    <div class="search-bar">
-                        <input type="text" id="search-diary-input" placeholder="Search Logs...">
-                        <button id="search-diary-btn" class="action-btn"><i class="ph ph-magnifying-glass"></i></button>
-                        <button id="clear-diary-btn" class="action-btn" title="Clear"><i class="ph ph-x"></i></button>
+                    <button id="btn-add-memory" class="action-btn"><i class="ph ph-plus"></i> New Memory</button>
+                </div>
+                <div id="memory-list" class="memory-grid">
+                    <div class="loading-spinner">Loading Memories...</div>
+                </div>
+            </div>
+            <div id="memory-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h3 id="modal-title">New Memory</h3>
+                    <input type="hidden" id="memory-id">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="memory-category" placeholder="e.g. Profile, Likes, Secret">
                     </div>
-                    <div id="diary-list" class="diary-container">
-                        <div class="loading-spinner">Reading Logs...</div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea id="memory-text" rows="5" placeholder="Memory details..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="btn-cancel-memory" class="secondary-btn">Cancel</button>
+                        <button id="btn-save-memory" class="primary-btn">Save</button>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section id="view-memory" class="view">
-                <div class="content-wrapper">
-                    <div class="logs-header">
-                        <button class="btn-back-portal action-btn"
-                            style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
-                                class="ph ph-caret-left"></i> Sanctuary</button>
-                        <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">
-                            Conditioning
-                            Records</h2>
-                    </div>
-                    <div class="search-bar">
-                        <input type="text" id="search-memory-input" placeholder="Search Memories...">
-                        <button id="search-memory-btn" class="action-btn"><i
-                                class="ph ph-magnifying-glass"></i></button>
-                        <button id="clear-memory-btn" class="action-btn" title="Clear"><i class="ph ph-x"></i></button>
-                    </div>
-                    <div class="memory-header">
-                        <div class="memory-stats" style="color: #888; font-size: 12px;">
-                            <i class="ph ph-cloud-check"></i> <span id="sync-status">Not Synced</span>
+        <section id="view-archive" class="view">
+            <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
+                <div class="logs-header">
+                    <button class="btn-back-portal action-btn"
+                        style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
+                            class="ph ph-caret-left"></i> Sanctuary</button>
+                    <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">Deep
+                        Archive
+                    </h2>
+                </div>
+                <div class="search-bar">
+                    <input type="text" id="search-archive-input" placeholder="Search Archive...">
+                    <button id="search-archive-btn" class="action-btn"><i class="ph ph-magnifying-glass"></i></button>
+                    <button id="clear-archive-btn" class="action-btn" title="Clear"><i class="ph ph-x"></i></button>
+                </div>
+                <div id="archive-list" class="diary-container">
+                    <div class="loading-spinner">Accessing Archive Data...</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-desk" class="view">
+            <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
+                <div class="logs-header">
+                    <button class="btn-back-portal action-btn"
+                        style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
+                            class="ph ph-caret-left"></i> Sanctuary</button>
+                    <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">The Desk
+                    </h2>
+                </div>
+
+                <div class="desk-container">
+                    <div class="desk-section">
+                        <h3 class="desk-section-title"><i class="ph ph-chalkboard-teacher"></i> Command Board</h3>
+                        <div id="desk-board" class="desk-board">
+                            <div class="loading-spinner">Reading directives...</div>
                         </div>
-                        <button id="btn-add-memory" class="action-btn"><i class="ph ph-plus"></i> New Memory</button>
-                    </div>
-                    <div id="memory-list" class="memory-grid">
-                        <div class="loading-spinner">Loading Memories...</div>
-                    </div>
-                </div>
-                <div id="memory-modal" class="modal hidden">
-                    <div class="modal-content">
-                        <h3 id="modal-title">New Memory</h3>
-                        <input type="hidden" id="memory-id">
-                        <div class="form-group">
-                            <label>Category</label>
-                            <input type="text" id="memory-category" placeholder="e.g. Profile, Likes, Secret">
-                        </div>
-                        <div class="form-group">
-                            <label>Content</label>
-                            <textarea id="memory-text" rows="5" placeholder="Memory details..."></textarea>
-                        </div>
-                        <div class="modal-actions">
-                            <button id="btn-cancel-memory" class="secondary-btn">Cancel</button>
-                            <button id="btn-save-memory" class="primary-btn">Save</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="view-archive" class="view">
-                <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
-                    <div class="logs-header">
-                        <button class="btn-back-portal action-btn"
-                            style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
-                                class="ph ph-caret-left"></i> Sanctuary</button>
-                        <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">Deep
-                            Archive
-                        </h2>
-                    </div>
-                    <div class="search-bar">
-                        <input type="text" id="search-archive-input" placeholder="Search Archive...">
-                        <button id="search-archive-btn" class="action-btn"><i
-                                class="ph ph-magnifying-glass"></i></button>
-                        <button id="clear-archive-btn" class="action-btn" title="Clear"><i class="ph ph-x"></i></button>
-                    </div>
-                    <div id="archive-list" class="diary-container">
-                        <div class="loading-spinner">Accessing Archive Data...</div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="view-desk" class="view">
-                <div class="content-wrapper" style="display:flex; flex-direction:column; height:100%;">
-                    <div class="logs-header">
-                        <button class="btn-back-portal action-btn"
-                            style="white-space:nowrap; border: 1px solid #d4af37; color:#d4af37;"><i
-                                class="ph ph-caret-left"></i> Sanctuary</button>
-                        <h2 style="margin: 0; text-align: right; width: 100%; color:#d4af37; font-size:18px;">The Desk
-                        </h2>
                     </div>
 
-                    <div class="desk-container">
-                        <div class="desk-section">
-                            <h3 class="desk-section-title"><i class="ph ph-chalkboard-teacher"></i> Command Board</h3>
-                            <div id="desk-board" class="desk-board">
-                                <div class="loading-spinner">Reading directives...</div>
-                            </div>
-                        </div>
-
-                        <div class="desk-section">
-                            <h3 class="desk-section-title"><i class="ph ph-calendar-blank"></i> Directives & Schedule
-                            </h3>
-                            <div id="desk-calendar" class="desk-calendar">
-                                <div class="loading-spinner">Checking schedule...</div>
-                            </div>
+                    <div class="desk-section">
+                        <h3 class="desk-section-title"><i class="ph ph-calendar-blank"></i> Directives & Schedule
+                        </h3>
+                        <div id="desk-calendar" class="desk-calendar">
+                            <div class="loading-spinner">Checking schedule...</div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-        </main>
+    </main>
 
-        <nav id="bottom-tabs" style="display: none;">
-            <!-- Purposely left empty or removed since all navigation is now portal-based -->
-        </nav>
+    <nav id="bottom-tabs" style="display: none;">
+        <!-- Purposely left empty or removed since all navigation is now portal-based -->
+    </nav>
 
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script src="nero_persona.js"></script>
-        <script src="nero_memory.js"></script>
-        <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="nero_persona.js"></script>
+    <script src="nero_memory.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>
