@@ -246,6 +246,7 @@ async function sendMessage() {
     saveToHistory("user", text || "[Image Sent]", image ? image.preview : null);
 
     try {
+        if (sendBtn) sendBtn.disabled = true;
         showTyping();
         // 🌟 RAG向けに生のtextを渡す
         const responseText = await callNeroProxy(text, chatLog, image ? { mimeType: image.mimeType, data: image.data } : null);
@@ -255,6 +256,8 @@ async function sendMessage() {
     } catch (err) {
         hideTyping();
         displayMessage("nero", `[Error] ${err.message}`);
+    } finally {
+        if (sendBtn) sendBtn.disabled = false;
     }
 }
 
@@ -306,7 +309,7 @@ async function handlePanic() {
 }
 
 // --- 8. Proxy (マルチモーダル対応版！) ---
-async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) {
+async function callNeroProxy(logText, history, imageObj = null) {
     const systemPrompt = NERO_PERSONA_TEXT + "\n\n" + RISA_PROFILE + "\n\n[Date: " + new Date().toLocaleString() + "]";
     const contents = [{ role: "user", parts: [{ text: systemPrompt }] }];
 
@@ -338,33 +341,31 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
         }
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 65000); // 65秒待機できるようにする
+
     try {
         const res = await fetch(PROXY_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(requestBody),
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         let data = null;
         let isOverloaded = res.status === 503;
 
         if (!isOverloaded) {
             data = await res.json();
-            if (data.error && (String(data.error).includes("503") || String(data.error).includes("overloaded") || String(data.error).includes("quota"))) {
+            if (data.error && (String(data.error).includes("503") || String(data.error).includes("overloaded") || String(data.error).includes("quota") || String(data.error).includes("429"))) {
                 isOverloaded = true;
             }
         }
 
-        // Gemini高負荷時の待機とリトライ
+        // Gemini高負荷時の対応 (自動リトライは廃止)
         if (isOverloaded) {
-            if (retryCount >= 1) { // 1度だけ自動リトライしてダメならネロ様メッセージ
-                return "ネロ様が少しお考え中のようです。数分後に再度お声がけください";
-            }
-            // 20秒待機して1回だけリトライ (429回避用)
-            const backoffTime = 20000;
-            console.warn(`[Nero Retry] Gemini Overloaded. Retrying in ${backoffTime}ms (Attempt ${retryCount + 1})`);
-            await new Promise(r => setTimeout(r, backoffTime));
-            return callNeroProxy(logText, history, imageObj, retryCount + 1);
+            return "ネロ様が少しお考え中のようです。数分後に再度お声がけください";
         }
 
         if (data && data.candidates) return data.candidates[0].content.parts[0].text;
@@ -372,6 +373,9 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
         throw new Error(data && data.error ? data.error : "No response from Sanctuary.");
     } catch (error) {
         console.error("[Nero Fetch Error]", error);
+        if (error.name === 'AbortError') {
+            return "ネロ様がお忙しいようです。タイムアウトしました。";
+        }
         // 通常のエラーやネットワーク切断時でもアプリが止まらないよう優しく返す
         return "ネロ様が少しお考え中のようです。数分後に再度お声がけください";
     }
