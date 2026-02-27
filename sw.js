@@ -1,4 +1,4 @@
-const CACHE_NAME = "nero-sanctuary-v3";
+const CACHE_NAME = "nero-sanctuary-v4";
 const ASSETS = [
     "./",
     "./index.html",
@@ -12,7 +12,7 @@ const ASSETS = [
 
 // Install Event: Cache Core Assets
 self.addEventListener("install", (e) => {
-    console.log("[Service Worker] Install (v3)");
+    console.log("[Service Worker] Install (v4)");
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
             console.log("[Service Worker] Caching all: app shell and content");
@@ -47,7 +47,7 @@ self.addEventListener("fetch", (e) => {
 
 // Activate Event: Clean up old caches
 self.addEventListener("activate", (e) => {
-    console.log("[Service Worker] Activate (v3)");
+    console.log("[Service Worker] Activate (v4)");
     e.waitUntil(
         caches.keys().then((keyList) => {
             return Promise.all(keyList.map((key) => {
