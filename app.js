@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbwkJykfBO9FC2LV9JAXhUsfahw4k3cACKNDEzKuUCftMkN9te1ucqOffCD96YcsKQ2yAQ/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbwJbtCxuaZl5xUoz3AralFZtHMsrPRz32so-Qz9jmfxqqf9qe-xrRi-iSn34Wxm_FyxyA/exec";
 
 // --- 2. State ---
 let chatLog = [];
