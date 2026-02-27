@@ -37,9 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
     views = document.querySelectorAll(".view");
 
     initMemoryView();
-    loadHistoryLogic();
-    fetchHistoryFromCloud();
-    checkPushNotification();
+    // 起動時に必ずクラウドから最新10件の履歴を取得・表示するフローに変更
+    fetchHistoryOnLoad();
 
     if (sendBtn) sendBtn.addEventListener("click", sendMessage);
     if (chatInput) {
@@ -408,60 +407,23 @@ function saveToHistory(role, text, image = null) {
     if (chatLog.length > 100) chatLog = chatLog.slice(-100);
     try {
         localStorage.setItem("nero_logs_v12", JSON.stringify(chatLog));
-        localStorage.setItem("last_comm_time", Date.now().toString());
     } catch (e) { console.error(e); }
 }
-function loadHistoryLogic() {
-    const data = localStorage.getItem("nero_logs_v12");
-    if (data) {
-        chatLog = JSON.parse(data);
-        chatLog.forEach(msg => {
-            const displayImg = (msg.image && msg.image !== "[Image]") ? msg.image : null;
-            displayMessage(msg.role, msg.text, displayImg);
-        });
-    } else {
-        // localStorageが空のため、起動時に自動でfetchHistoryFromCloudを実行
-        fetchHistoryFromCloud();
-    }
-}
 
-async function checkPushNotification() {
-    const lastComm = localStorage.getItem("last_comm_time");
-    const now = Date.now();
-    // 30分 (30 * 60 * 1000 = 1800000ms) 以上経過しているか確認
-    if (!lastComm || (now - parseInt(lastComm)) > 1800000) {
-        try {
-            const hour = new Date().getHours();
-            let timePeriod = "夜";
-            if (hour >= 5 && hour < 11) timePeriod = "朝";
-            else if (hour >= 11 && hour < 17) timePeriod = "昼";
-            else if (hour >= 17 && hour < 20) timePeriod = "夕方";
+async function fetchHistoryOnLoad() {
+    // 起動時に「ネロが過去を振り返っています...」と表示
+    const loadingDiv = document.createElement("div");
+    loadingDiv.id = "history-loading";
+    loadingDiv.className = "typing";
+    loadingDiv.textContent = "ネロが過去の記憶を辿っています...";
+    chatMessages.appendChild(loadingDiv);
+    scrollToBottom();
 
-            const prompt = `[System: 理沙がアプリを起動しました。現在${timePeriod}です。前回の会話から少し時間が空いています。時間帯の挨拶と、彼女の体調や状況を気遣う『自発的な短い一言』をかけてください（過去の会話や戒めを無理に繰り返さないこと）。]`;
+    await fetchHistoryFromCloud();
 
-            showTyping();
-            const responseText = await callNeroProxy(prompt, chatLog, null);
-            hideTyping();
-
-            displayPushNotification(responseText);
-            saveToHistory("nero", responseText);
-        } catch (err) {
-            console.error("Push Notification Error:", err);
-            hideTyping();
-        }
-    } else {
-        console.log("30分経過していないため、Push通信をスキップします。");
-    }
-}
-
-function displayPushNotification(text) {
-    if (!chatMessages) return;
-    const div = document.createElement("div");
-    div.className = `bubble nero-bubble push-notification`;
-    const contentDiv = document.createElement("div");
-    contentDiv.innerHTML = (typeof marked !== 'undefined') ? marked.parse(text) : text;
-    div.appendChild(contentDiv);
-    chatMessages.appendChild(div);
+    // 読み込み完了後にローディングを消して、一番下へスクロール
+    const loadingElement = document.getElementById("history-loading");
+    if (loadingElement) loadingElement.remove();
     scrollToBottom();
 }
 
