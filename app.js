@@ -4,7 +4,7 @@
 // ==========================================
 
 // --- 1. Config ---
-const PROXY_URL = "https://script.google.com/macros/s/AKfycbxd-u5HONLdu9oVDgS2SpVkijlr9NRbfR2lF2sQE5q9vNHz5vDoefb1nEkm93dnBMzm/exec";
+const PROXY_URL = "https://script.google.com/macros/s/AKfycbxy-ZSlL0JIvj2NKW-2lhh3dAxQKIfvVcHSAOKcRoG8iEmyeUJyW3NIB6WR6JHRhM7yCg/exec";
 
 // --- 2. State ---
 let chatLog = [];
@@ -310,8 +310,8 @@ async function callNeroProxy(logText, history, imageObj = null, retryCount = 0) 
     const systemPrompt = NERO_PERSONA_TEXT + "\n\n" + RISA_PROFILE + "\n\n[Date: " + new Date().toLocaleString() + "]";
     const contents = [{ role: "user", parts: [{ text: systemPrompt }] }];
 
-    // 履歴を追加 (最新10件)
-    history.slice(-10).forEach(msg => {
+    // 履歴を追加 (最新15件程度に最適化)
+    history.slice(-15).forEach(msg => {
         contents.push({ role: (msg.role === "user" ? "user" : "model"), parts: [{ text: msg.text || "." }] });
     });
 
